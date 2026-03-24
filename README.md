@@ -2,20 +2,20 @@
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ceftriaxone-pbpk-simulator.streamlit.app/)
 
-簡略化PBPKモデルによる個別化投与設計シミュレーション
+簡略化全身PBPKモデルによる個別化投与設計シミュレーション
 
 ## 概要
 
 このシミュレーターは以下の臨床的問いに対応するために設計されました：
 
-1. **治療効果d**: 任意の患者・投与レジメンで、治療目標（%fT>MIC）を達成できるか
+1. **治療効果**: 任意の患者・投与レジメンで、治療目標（%fT>MIC）を達成できるか
 2. **偽胆石リスク**: 任意の患者・投与レジメンで、胆汁中セフトリアキソン濃度がCa-CTRX沈殿閾値を超えるか
 
 ## モデルの特徴
 
 ### 構造
 
-- 簡略化全身PBPKモデル（7コンパートメント）
+- 簡略化PBPKモデル（7コンパートメント）
   - 動脈血 / 静脈血 / 肺 / 肝臓 / 腎臓 / 残余組織 / 胆嚢
 - Well-stirred model（灌流律速）
 - Poulin-Theil推定によるKp値
@@ -45,7 +45,9 @@
 - 点滴時間: 5–60分
 - 投与間隔: 12h / 24h
 - 投与回数: 1–14回
-- MICプリセット（カスタム値も設定可）
+- MICプリセット（CLSI M100 準拠、カスタム値も設定可）
+  - Enterobacterales / S. pneumoniae（髄膜炎・非髄膜炎）/ H. influenzae / N. meningitidis / N. gonorrhoeae
+- 目標 %fT>MIC: 40–100%（スライダーで調整可）
 
 ## アプリのタブ構成
 
@@ -54,8 +56,8 @@
 | 📈 血漿中濃度推移 | 総濃度・遊離型濃度の経時推移、排泄経路（腎/胆汁）、PK要約テーブル |
 | 🎯 %fT>MIC 解析 | 定常状態の遊離型濃度 vs MIC、5パターン投与量比較 |
 | ⚠️ 偽胆石リスク | Ca-CTRX飽和指数（SI）推移、胆嚢内濃度推移、リスク評価 |
-| 🔬 感度分析 | GFR / アルブミン値による%fT>MIC・SIへの影響 |
-| 🗺️ ヒートマップ | ALB×GFRの%fT>MICマップ、GFR×投与パターンのSIマップ、ALB×GFRのSIマップ |
+| 🔬 感度分析 | 体重・血清アルブミン値・GFR・食事回数による%fT>MIC・SIへの影響 |
+| 🗺️ ヒートマップ | %fT>MIC（ALB×GFR / GFR×投与パターン）、最大SI（ALB×GFR / GFR×投与パターン） |
 | ℹ️ モデル情報 | モデル構造・パラメータ・閾値・制限事項・参考文献 |
 
 ## ファイル構成
@@ -99,3 +101,4 @@ streamlit run streamlit_app.py
 - Shiffman ML et al. (1990) *Gastroenterology* 99:1772-1778
 - Craig WA (1998) *Clin Infect Dis* 26:1-10
 - Drusano GL (2003) *Clin Infect Dis* 36(Suppl 1):S42-S50
+- Roberts JA et al. (2014) *Clin Infect Dis* 58:1072-1083
