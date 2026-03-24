@@ -370,16 +370,20 @@ with tab2:
             name='遊離型 Cp', line=dict(color='#e74c3c', width=2),
             fill='tozeroy', fillcolor='rgba(231,76,60,0.05)',
         ))
-        # MIC超過域を緑で塗る
-        above = ss_plot[ss_plot['Cp_free'] > mic_val]
-        if len(above) > 0:
-            fig_ft.add_trace(go.Scatter(
-                x=above['time'], y=above['Cp_free'],
-                name='MIC超過域', fill='tozeroy',
-                fillcolor='rgba(39,174,96,0.2)',
-                line=dict(color='rgba(0,0,0,0)'),
-                showlegend=True,
-            ))
+        # MIC超過域を緑で塗る（MICライン〜Cp曲線の間のみ）
+        cp_clipped = np.maximum(ss_plot['Cp_free'].values, mic_val)
+        fig_ft.add_trace(go.Scatter(
+            x=ss_plot['time'], y=[mic_val] * len(ss_plot),
+            name='_mic_base', line=dict(color='rgba(0,0,0,0)'),
+            showlegend=False,
+        ))
+        fig_ft.add_trace(go.Scatter(
+            x=ss_plot['time'], y=cp_clipped,
+            name='MIC超過域', fill='tonexty',
+            fillcolor='rgba(39,174,96,0.2)',
+            line=dict(color='rgba(0,0,0,0)'),
+            showlegend=True,
+        ))
         fig_ft.add_hline(y=mic_val, line_dash='dash', line_color='#2c3e50',
                          annotation_text=f'MIC = {mic_val} mg/L',
                          annotation_position='top left')
