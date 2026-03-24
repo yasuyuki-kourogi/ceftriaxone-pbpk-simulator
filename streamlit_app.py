@@ -203,7 +203,7 @@ with st.sidebar:
     meals_option = st.selectbox(
         "食事回数（/日）",
         ["絶食（0回）", "1回", "2回", "3回（通常）"],
-        index=3,
+        index=0,
     )
     meals_map = {"絶食（0回）": 0, "1回": 1, "2回": 2, "3回（通常）": 3}
     meals_per_day = meals_map[meals_option]
@@ -228,7 +228,7 @@ with st.sidebar:
         "カスタム": -1,
     }
     mic_choice = st.selectbox(
-        "MIC プリセット (CLSI M100 準拠)", list(mic_presets.keys()))
+        "MIC プリセット (CLSI M100 準拠)", list(mic_presets.keys()), index=3)
     mic_val = mic_presets[mic_choice]
     if mic_val < 0:
         mic_val = st.number_input("カスタム MIC (mg/L)", 0.0625, 8.0, 1.0, 0.125)
