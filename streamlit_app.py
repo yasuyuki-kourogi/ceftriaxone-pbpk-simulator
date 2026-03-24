@@ -192,8 +192,8 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("セフトリアキソン PBPK シミュレーター（試行錯誤中です）")
-st.caption("scipy.integrate による生理学的薬物動態モデル（非線形アルブミン結合対応）")
+st.title("セフトリアキソン PBPK シミュレーター")
+st.caption("簡略化PBPKモデルによる個別化投与設計シミュレーション")
 
 # ── Sidebar ──
 with st.sidebar:
