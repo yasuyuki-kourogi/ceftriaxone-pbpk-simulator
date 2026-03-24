@@ -193,7 +193,7 @@ st.set_page_config(
 )
 
 st.title("セフトリアキソン PBPK シミュレーター")
-st.caption("簡略化PBPKモデルによる個別化投与設計シミュレーション")
+st.caption("治療効果（%fT>MIC）と偽胆石リスク（SI）の同時評価")
 
 # ── Sidebar ──
 with st.sidebar:
