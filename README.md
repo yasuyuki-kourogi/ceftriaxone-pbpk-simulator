@@ -42,9 +42,9 @@
 ### 投与設計
 
 - 投与量: 500 / 1000 / 2000 mg
-- 点滴時間: 5–60分
+- 点滴時間: 15–60分
 - 投与間隔: 12h / 24h
-- 投与回数: 1–14回
+- 治療期間: 7日（固定）
 - MICプリセット（CLSI M100 準拠、カスタム値も設定可）
   - Enterobacterales / S. pneumoniae（髄膜炎・非髄膜炎）/ H. influenzae / N. meningitidis / N. gonorrhoeae
 - 目標 %fT>MIC: 40–100%（スライダーで調整可）

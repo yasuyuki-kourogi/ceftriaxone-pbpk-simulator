@@ -219,8 +219,7 @@ with st.sidebar:
     dose_mg = st.selectbox("1回投与量 (mg)", [500, 1000, 2000], index=1)
     tinf_min = st.slider("点滴時間 (分)", 15, 60, 30, 15)
     ii_h = st.selectbox("投与間隔 (時間)", [12, 24], index=1)
-    tx_days = st.selectbox("治療期間 (日)", [7, 10, 14], index=0)
-    ndoses = int(tx_days * 24 / ii_h)
+    ndoses = int(7 * 24 / ii_h)  # 治療期間7日固定
 
     st.markdown("---")
     st.header("感染症パラメータ")
