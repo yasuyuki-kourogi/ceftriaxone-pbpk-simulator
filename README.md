@@ -1,4 +1,4 @@
-# セフトリアキソン PBPK シミュレーター
+# セフトリアキソン PBPK シミュレーター（試行錯誤中）
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ceftriaxone-pbpk-simulator.streamlit.app/)
 
