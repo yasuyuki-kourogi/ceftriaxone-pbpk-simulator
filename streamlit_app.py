@@ -577,47 +577,7 @@ with tab4:
             "一方、胆嚢内濃度も上昇するため偽胆石リスクも増加します。"
         )
 
-    elif sa_type == "GFR の影響":
-        values = [15, 30, 60, 90, 120]
-        colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
-        col_sa1, col_sa2 = st.columns(2)
-
-        fig_g1 = go.Figure()
-        fig_g2 = go.Figure()
-        for g, col_c in zip(values, colors_5):
-            df_g = cached_sim(to_tuple({**patient, 'GFR': g}), to_tuple(dosing))
-            ft = calc_fTMIC(df_g, mic_val, ii_h, ndoses)
-            si_g = calc_max_SI(df_g, ii_h, ndoses)
-            fig_g1.add_trace(go.Scatter(
-                x=df_g['time'], y=df_g['Cp_free'],
-                name=f'GFR={g} (fT={ft:.0f}%, SI={si_g:.1f})',
-                line=dict(color=col_c, width=1.5),
-            ))
-            fig_g2.add_trace(go.Scatter(
-                x=df_g['time'], y=df_g['SI'],
-                name=f'GFR={g}', line=dict(color=col_c, width=1.5),
-            ))
-
-        fig_g1.add_hline(y=mic_val, line_dash='dash', line_color='black')
-        fig_g1.update_layout(
-            title=f"GFR の影響 — %fT>MIC (MIC={mic_val} mg/L)",
-            xaxis_title="時間 (h)", yaxis_title="遊離型血漿中濃度 (mg/L)",
-            yaxis=dict(rangemode='tozero'), height=450,
-        )
-        fig_g2.add_hline(y=FIXED['SI_threshold'], line_dash='dash', line_color='#e74c3c',
-                         annotation_text=f"準安定限界 ({FIXED['SI_threshold']})")
-        fig_g2.update_layout(
-            title="GFR の影響 — 偽胆石リスク",
-            xaxis_title="時間 (h)", yaxis_title="飽和指数 (SI)",
-            height=450,
-        )
-
-        with col_sa1:
-            st.plotly_chart(fig_g1, use_container_width=True)
-        with col_sa2:
-            st.plotly_chart(fig_g2, use_container_width=True)
-
-    elif sa_type == "アルブミンの影響":
+    elif sa_type == "血清アルブミン値の影響":
         values = [1.5, 2.0, 2.5, 3.0, 4.0]
         colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
         col_sa1, col_sa2 = st.columns(2)
@@ -657,6 +617,46 @@ with tab4:
             st.plotly_chart(fig_a1, use_container_width=True)
         with col_sa2:
             st.plotly_chart(fig_a2, use_container_width=True)
+
+    elif sa_type == "GFR の影響":
+        values = [15, 30, 60, 90, 120]
+        colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
+        col_sa1, col_sa2 = st.columns(2)
+
+        fig_g1 = go.Figure()
+        fig_g2 = go.Figure()
+        for g, col_c in zip(values, colors_5):
+            df_g = cached_sim(to_tuple({**patient, 'GFR': g}), to_tuple(dosing))
+            ft = calc_fTMIC(df_g, mic_val, ii_h, ndoses)
+            si_g = calc_max_SI(df_g, ii_h, ndoses)
+            fig_g1.add_trace(go.Scatter(
+                x=df_g['time'], y=df_g['Cp_free'],
+                name=f'GFR={g} (fT={ft:.0f}%, SI={si_g:.1f})',
+                line=dict(color=col_c, width=1.5),
+            ))
+            fig_g2.add_trace(go.Scatter(
+                x=df_g['time'], y=df_g['SI'],
+                name=f'GFR={g}', line=dict(color=col_c, width=1.5),
+            ))
+
+        fig_g1.add_hline(y=mic_val, line_dash='dash', line_color='black')
+        fig_g1.update_layout(
+            title=f"GFR の影響 — %fT>MIC (MIC={mic_val} mg/L)",
+            xaxis_title="時間 (h)", yaxis_title="遊離型血漿中濃度 (mg/L)",
+            yaxis=dict(rangemode='tozero'), height=450,
+        )
+        fig_g2.add_hline(y=FIXED['SI_threshold'], line_dash='dash', line_color='#e74c3c',
+                         annotation_text=f"準安定限界 ({FIXED['SI_threshold']})")
+        fig_g2.update_layout(
+            title="GFR の影響 — 偽胆石リスク",
+            xaxis_title="時間 (h)", yaxis_title="飽和指数 (SI)",
+            height=450,
+        )
+
+        with col_sa1:
+            st.plotly_chart(fig_g1, use_container_width=True)
+        with col_sa2:
+            st.plotly_chart(fig_g2, use_container_width=True)
 
     else:  # 食事回数の影響
         meal_values = [0, 1, 2, 3]
