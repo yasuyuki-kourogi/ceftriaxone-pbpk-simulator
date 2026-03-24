@@ -2,7 +2,7 @@
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ceftriaxone-pbpk-simulator.streamlit.app/)
 
-治療効果（%fT>MIC）と偽胆石リスク（SI）の同時評価
+治療効果と偽胆石リスクの同時評価
 
 ## 概要
 
