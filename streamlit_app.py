@@ -9,7 +9,7 @@
 # References:
 #   Alasmari et al. (2023) Front Pharmacol 14:1200828
 #   Ewoldt TMJ et al. (2023) J Antimicrob Chemother 78:1059-1065
-#   Shiffman et al. (1990) Gastroenterology 99:1772
+#   Shiffman et al. (1990) Gastroenterology 99:1772-1778
 ###############################################################################
 
 import numpy as np
@@ -778,10 +778,10 @@ with tab6:
             "- Alasmari F et al. (2023) *Front Pharmacol* 14:1200828 — PBPKモデル構造・Kp値・胆汁CL\n"
             "- Ewoldt TMJ et al. (2023) *J Antimicrob Chemother* 78:1059-1065 — 遊離濃度予測モデル・蛋白結合\n"
             "- Schleibinger M et al. (2015) *Br J Clin Pharmacol* 80:525-533 — ICU患者PK・蛋白結合\n"
-            "- Shiffman ML et al. (1990) *Gastroenterology* 99:1772 — Ca-CTRX 溶解度積\n"
+            "- Shiffman ML et al. (1990) *Gastroenterology* 99:1772-1778 — Ca-CTRX 溶解度積\n"
             "- Craig WA (1998) *Clin Infect Dis* 26:1-10 — β-ラクタム系PK/PDターゲット\n"
             "- Drusano GL (2003) *Clin Infect Dis* 36(Suppl 1):S42-S50 — 耐性抑制のためのPK/PD投与設計\n"
-            "- Roberts JA et al. (2014) *Clin Infect Dis* 58:1072 — DALI study"
+            "- Roberts JA et al. (2014) *Clin Infect Dis* 58:1072-1083 — DALI study"
         )
 
     st.markdown("---")
