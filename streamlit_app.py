@@ -454,15 +454,29 @@ with tab3:
     col_si1, col_si2 = st.columns(2)
 
     with col_si1:
+        si_thresh = FIXED['SI_threshold']
         fig_si = go.Figure()
         fig_si.add_trace(go.Scatter(
             x=df['time'], y=df['SI'],
             name='飽和指数 (SI)', line=dict(color='#27ae60', width=2),
-            fill='tozeroy', fillcolor='rgba(39,174,96,0.05)',
         ))
-        fig_si.add_hline(y=FIXED['SI_threshold'], line_dash='dash',
+        # 準安定限界超過域を赤で塗る
+        si_clipped = np.maximum(df['SI'].values, si_thresh)
+        fig_si.add_trace(go.Scatter(
+            x=df['time'], y=[si_thresh] * len(df),
+            name='_si_base', line=dict(color='rgba(0,0,0,0)'),
+            showlegend=False,
+        ))
+        fig_si.add_trace(go.Scatter(
+            x=df['time'], y=si_clipped,
+            name='準安定限界超過域', fill='tonexty',
+            fillcolor='rgba(231,76,60,0.2)',
+            line=dict(color='rgba(0,0,0,0)'),
+            showlegend=True,
+        ))
+        fig_si.add_hline(y=si_thresh, line_dash='dash',
                          line_color='#e74c3c',
-                         annotation_text=f"準安定限界 (SI={FIXED['SI_threshold']})")
+                         annotation_text=f"準安定限界 (SI={si_thresh})")
         fig_si.add_hline(y=1.0, line_dash='dot', line_color='#f39c12',
                          annotation_text='Ksp (SI=1.0)')
         fig_si.update_layout(
