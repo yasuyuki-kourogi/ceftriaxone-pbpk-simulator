@@ -203,10 +203,10 @@ with st.sidebar:
     gfr = st.slider("GFR (mL/min)", 5, 150, 45, 1)
     meals_option = st.selectbox(
         "食事回数（/日）",
-        ["絶食（0回）", "1回", "2回", "3回（通常）"],
+        ["絶食", "1回", "2回", "3回（通常）"],
         index=0,
     )
-    meals_map = {"絶食（0回）": 0, "1回": 1, "2回": 2, "3回（通常）": 3}
+    meals_map = {"絶食": 0, "1回": 1, "2回": 2, "3回（通常）": 3}
     meals_per_day = meals_map[meals_option]
     ca_bile = st.number_input("胆汁中 Ca²⁺ (mmol/L)", 1.0, 10.0, 5.0, 0.5)
     gb_conc = st.slider("胆汁濃縮係数", 1, 10, 5, 1)
@@ -679,7 +679,7 @@ with tab4:
 
     else:  # 食事回数の影響
         meal_values = [0, 1, 2, 3]
-        meal_labels = ['絶食（0回）', '1回/日', '2回/日', '3回/日']
+        meal_labels = ['絶食', '1回/日', '2回/日', '3回/日']
         colors_4 = ['#e74c3c', '#e67e22', '#2ecc71', '#3498db']
         col_sa1, col_sa2 = st.columns(2)
 
