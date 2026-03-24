@@ -639,7 +639,7 @@ with tab5:
             fig_hm.update_layout(
                 title=f"%fT>MIC ヒートマップ ({dose_mg}mg {ii_h}時間毎, MIC={mic_val} mg/L, 目標: {ftmic_target}%以上)",
                 xaxis_title="GFR (mL/min)", yaxis_title="血清アルブミン値 (g/dL)",
-                height=500,
+                xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_hm, use_container_width=True)
 
@@ -675,7 +675,7 @@ with tab5:
             fig_si_hm.update_layout(
                 title=f"最大飽和指数ヒートマップ (ALB={alb}g/dL, Ca²⁺={ca_bile}mmol/L, 食事{meals_per_day}回/日)\n準安定限界: SI>{FIXED['SI_threshold']}",
                 xaxis_title="GFR (mL/min)", yaxis_title="投与パターン",
-                height=500,
+                xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_si_hm, use_container_width=True)
 
@@ -703,7 +703,7 @@ with tab5:
             fig_si2.update_layout(
                 title=f"最大飽和指数ヒートマップ (ALB × GFR)\n{dose_mg}mg {ii_h}時間毎, 食事{meals_per_day}回/日",
                 xaxis_title="GFR (mL/min)", yaxis_title="血清アルブミン値 (g/dL)",
-                height=500,
+                xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_si2, use_container_width=True)
 
