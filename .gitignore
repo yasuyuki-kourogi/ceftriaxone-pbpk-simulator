@@ -1,0 +1,24 @@
+# R関連
+.RData
+.Rhistory
+.Rproj.user/
+rsconnect/
+mrgsolve.Rproj
+app.R
+test_model.R
+ceftriaxone_pbpk.cpp
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# ノートブック・データ
+ctrx_pbpk_sensitivity.ipynb
+ctrx_pbpk_results.csv
+ctrx_pbpk_model_structure.png
+
+# その他
+.claude/
+__pycache__/
+*.pyc
+README.md
