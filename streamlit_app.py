@@ -126,17 +126,14 @@ def run_simulation(patient, dosing, sim_duration_h=None):
     y0 = [0.0] * 10
     fast = dosing.get('_fast', False)
     dt = 0.5 if fast else 0.1
-    # 短い点滴時間に対応: max_stepとdtを点滴時間の1/4以下に制限
-    max_dt = min(dt, tinf_h / 4)
-    t_eval = np.arange(0, sim_duration_h + max_dt * 0.5, max_dt)
+    t_eval = np.arange(0, sim_duration_h + dt * 0.5, dt)
     t_eval = t_eval[t_eval <= sim_duration_h]
-    max_step = 0.5 if fast else min(0.1, tinf_h / 4)
 
     sol = solve_ivp(
         fun=lambda t, y: _pbpk_rhs(t, y, p, dose_schedule),
         t_span=(0.0, sim_duration_h), y0=y0, t_eval=t_eval,
         method='LSODA', atol=1e-8 if fast else 1e-10,
-        rtol=1e-6 if fast else 1e-8, max_step=max_step,
+        rtol=1e-6 if fast else 1e-8, max_step=0.5 if fast else 0.1,
     )
 
     _, ART, VEN, LUNG, LIVER, KIDNEY, REST, GB, URINE, BILE_CUM = sol.y
@@ -217,7 +214,7 @@ with st.sidebar:
     st.markdown("---")
     st.header("投与設計")
     dose_mg = st.selectbox("1回投与量 (mg)", [500, 1000, 2000], index=1)
-    tinf_min = st.slider("点滴時間 (分)", 30, 60, 30, 15)
+    tinf_min = st.selectbox("点滴時間 (分)", [30, 60], index=0)
     ii_h = st.selectbox("投与間隔 (時間)", [12, 24], index=1)
     ndoses = int(7 * 24 / ii_h)  # 治療期間7日固定
 
