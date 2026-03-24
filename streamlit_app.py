@@ -124,13 +124,16 @@ def run_simulation(patient, dosing, sim_duration_h=None):
     p = {**FIXED, **pat}
     dose_schedule = [(i * ii_h, dose_mg, tinf_h) for i in range(n_doses)]
     y0 = [0.0] * 10
-    t_eval = np.arange(0, sim_duration_h + 0.05, 0.1)
+    fast = dosing.get('_fast', False)
+    dt = 0.5 if fast else 0.1
+    t_eval = np.arange(0, sim_duration_h + 0.05, dt)
     t_eval = t_eval[t_eval <= sim_duration_h]
 
     sol = solve_ivp(
         fun=lambda t, y: _pbpk_rhs(t, y, p, dose_schedule),
         t_span=(0.0, sim_duration_h), y0=y0, t_eval=t_eval,
-        method='LSODA', atol=1e-10, rtol=1e-8, max_step=0.1,
+        method='LSODA', atol=1e-8 if fast else 1e-10,
+        rtol=1e-6 if fast else 1e-8, max_step=0.5 if fast else 0.1,
     )
 
     _, ART, VEN, LUNG, LIVER, KIDNEY, REST, GB, URINE, BILE_CUM = sol.y
@@ -623,10 +626,12 @@ with tab5:
             gfr_range = np.arange(15, 135, 15)
             grid = np.zeros((len(alb_range), len(gfr_range)))
 
+            dosing_fast = {**dosing, '_fast': True}
             for i, a in enumerate(alb_range):
                 for j, g in enumerate(gfr_range):
-                    df_hm = run_simulation(
-                        {**patient, 'ALB': float(a), 'GFR': float(g)}, dosing)
+                    df_hm = cached_sim(
+                        to_tuple({**patient, 'ALB': float(a), 'GFR': float(g)}),
+                        to_tuple(dosing_fast))
                     grid[i, j] = calc_fTMIC(df_hm, mic_val, ii_h, ndoses)
 
             fig_hm = go.Figure(data=go.Heatmap(
@@ -661,9 +666,10 @@ with tab5:
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range2):
                 nd_cmp = int(ndoses * ii_h / ii_cmp)
                 for j, g in enumerate(gfr_range2):
-                    df_hm = run_simulation(
-                        {**patient, 'GFR': float(g)},
-                        {**dosing, 'dose_mg': d, 'ii_h': ii_cmp, 'n_doses': nd_cmp})
+                    df_hm = cached_sim(
+                        to_tuple({**patient, 'GFR': float(g)}),
+                        to_tuple({**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
+                                  'n_doses': nd_cmp, '_fast': True}))
                     grid_si[i, j] = calc_max_SI(df_hm, ii_cmp, nd_cmp)
 
             fig_si_hm = go.Figure(data=go.Heatmap(
@@ -688,10 +694,12 @@ with tab5:
             gfr_range3 = np.arange(15, 135, 15)
             grid_si2 = np.zeros((len(alb_range2), len(gfr_range3)))
 
+            dosing_fast2 = {**dosing, '_fast': True}
             for i, a in enumerate(alb_range2):
                 for j, g in enumerate(gfr_range3):
-                    df_hm2 = run_simulation(
-                        {**patient, 'ALB': float(a), 'GFR': float(g)}, dosing)
+                    df_hm2 = cached_sim(
+                        to_tuple({**patient, 'ALB': float(a), 'GFR': float(g)}),
+                        to_tuple(dosing_fast2))
                     grid_si2[i, j] = calc_max_SI(df_hm2, ii_h, ndoses)
 
             fig_si2 = go.Figure(data=go.Heatmap(
