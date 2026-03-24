@@ -218,14 +218,17 @@ with st.sidebar:
     st.markdown("---")
     st.header("感染症パラメータ")
     mic_presets = {
-        "Enterobacterales S ≤ 1 mg/L": 1.0,
-        "Enterobacterales R > 2 mg/L": 2.0,
-        "S. pneumoniae（髄膜炎）≤ 0.5": 0.5,
-        "S. pneumoniae（非髄膜炎）≤ 2": 2.0,
-        "N. gonorrhoeae ≤ 0.125": 0.125,
+        "Enterobacterales (S ≤ 1)": 1.0,
+        "Enterobacterales (I = 2)": 2.0,
+        "S. pneumoniae 髄膜炎 (S ≤ 0.5)": 0.5,
+        "S. pneumoniae 非髄膜炎 (S ≤ 1)": 1.0,
+        "H. influenzae (S ≤ 2)": 2.0,
+        "N. meningitidis (S ≤ 0.12)": 0.12,
+        "N. gonorrhoeae (S ≤ 0.25)": 0.25,
         "カスタム": -1,
     }
-    mic_choice = st.selectbox("MIC プリセット", list(mic_presets.keys()))
+    mic_choice = st.selectbox(
+        "MIC プリセット (CLSI M100 準拠)", list(mic_presets.keys()))
     mic_val = mic_presets[mic_choice]
     if mic_val < 0:
         mic_val = st.number_input("カスタム MIC (mg/L)", 0.0625, 8.0, 1.0, 0.125)
