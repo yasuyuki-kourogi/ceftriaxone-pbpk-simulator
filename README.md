@@ -1,8 +1,8 @@
-# セフトリアキソン PBPK シミュレーター（試行錯誤中）
+# セフトリアキソン PBPK シミュレーター
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ceftriaxone-pbpk-simulator.streamlit.app/)
 
-scipy.integrate + Streamlit によるセフトリアキソンの生理学的薬物動態（PBPK）シミュレーター。
+簡略化PBPKモデルによる個別化投与設計シミュレーション
 
 ## 概要
 
