@@ -525,7 +525,7 @@ with tab3:
 # ==========================================================================
 with tab4:
     sa_type = st.radio(
-        "感度分析パラメータ", ["GFR の影響", "アルブミンの影響"],
+        "感度分析パラメータ", ["アルブミンの影響", "GFR の影響", "食事回数の影響"],
         horizontal=True,
     )
 
@@ -569,7 +569,7 @@ with tab4:
         with col_sa2:
             st.plotly_chart(fig_g2, use_container_width=True)
 
-    else:  # アルブミンの影響
+    elif sa_type == "アルブミンの影響":
         values = [1.5, 2.0, 2.5, 3.0, 4.0]
         colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
         col_sa1, col_sa2 = st.columns(2)
@@ -609,6 +609,53 @@ with tab4:
             st.plotly_chart(fig_a1, use_container_width=True)
         with col_sa2:
             st.plotly_chart(fig_a2, use_container_width=True)
+
+    else:  # 食事回数の影響
+        meal_values = [0, 1, 2, 3]
+        meal_labels = ['絶食（0回）', '1回/日', '2回/日', '3回/日']
+        colors_4 = ['#e74c3c', '#e67e22', '#2ecc71', '#3498db']
+        col_sa1, col_sa2 = st.columns(2)
+
+        fig_m1 = go.Figure()
+        fig_m2 = go.Figure()
+        for m, lbl, col_c in zip(meal_values, meal_labels, colors_4):
+            df_m = cached_sim(
+                to_tuple({**patient, 'meals_per_day': m}), to_tuple(dosing))
+            si_m = calc_max_SI(df_m, ii_h, ndoses)
+            fig_m1.add_trace(go.Scatter(
+                x=df_m['time'], y=df_m['C_bile'],
+                name=f'{lbl}', line=dict(color=col_c, width=1.5),
+            ))
+            fig_m2.add_trace(go.Scatter(
+                x=df_m['time'], y=df_m['SI'],
+                name=f'{lbl} (SI={si_m:.1f})',
+                line=dict(color=col_c, width=1.5),
+            ))
+
+        fig_m1.update_layout(
+            title="食事回数の影響 — 胆嚢内CTRX濃度",
+            xaxis_title="時間 (h)", yaxis_title="胆嚢内 CTRX 濃度 (mg/L)",
+            yaxis=dict(rangemode='tozero'), height=450,
+        )
+        fig_m2.add_hline(y=FIXED['SI_threshold'], line_dash='dash', line_color='#e74c3c',
+                         annotation_text=f"準安定限界 ({FIXED['SI_threshold']})")
+        fig_m2.update_layout(
+            title="食事回数の影響 — 偽胆石リスク",
+            xaxis_title="時間 (h)", yaxis_title="飽和指数 (SI)",
+            height=450,
+        )
+
+        with col_sa1:
+            st.plotly_chart(fig_m1, use_container_width=True)
+        with col_sa2:
+            st.plotly_chart(fig_m2, use_container_width=True)
+
+        st.info(
+            "**食事回数は%fT>MICには影響しません**（血漿中濃度は変わらない）。\n\n"
+            "食事による胆嚢収縮が胆汁を排出するため、食事回数が多いほど"
+            "胆嚢内のCTRX蓄積が減少し、偽胆石リスクが低下します。"
+            "絶食患者では胆汁が貯留し、濃縮が進むためリスクが上昇します。"
+        )
 
 # ==========================================================================
 # Tab 5: Heatmaps（ノートブック セル16-18相当）
