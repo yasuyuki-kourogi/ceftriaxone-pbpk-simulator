@@ -237,7 +237,7 @@ with st.sidebar:
         "MIC プリセット (CLSI M100 準拠)", list(mic_presets.keys()), index=3)
     mic_val = mic_presets[mic_choice]
     if mic_val < 0:
-        mic_val = st.number_input("カスタム MIC (mg/L)", 0.0625, 8.0, 1.0, 0.125)
+        mic_val = st.number_input("カスタム MIC (mg/L)", 0.0625, 4.0, 1.0, 0.125)
     ftmic_target = st.slider("目標 %fT>MIC (%)", 40, 100, 60, 5)
 
 # Patient / dosing dicts
