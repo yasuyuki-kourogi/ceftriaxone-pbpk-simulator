@@ -745,7 +745,8 @@ with tab4:
 with tab5:
     hm_type = st.radio(
         "ヒートマップ種類",
-        ["%fT>MIC (ALB × GFR)", "最大 SI (GFR × 投与パターン)", "最大 SI (ALB × GFR)"],
+        ["%fT>MIC (ALB × GFR)", "%fT>MIC (GFR × 投与パターン)",
+         "最大 SI (GFR × 投与パターン)", "最大 SI (ALB × GFR)"],
         horizontal=True,
     )
 
@@ -779,6 +780,44 @@ with tab5:
                 xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_hm, use_container_width=True)
+
+    elif hm_type == "%fT>MIC (GFR × 投与パターン)":
+        with st.spinner("ヒートマップ計算中..."):
+            gfr_range_ft = np.arange(15, 135, 15)
+            dose_range_ft = [
+                ('0.5g 24h毎', 500, 24),
+                ('0.5g 12h毎', 500, 12),
+                ('1g 24h毎', 1000, 24),
+                ('1g 12h毎', 1000, 12),
+                ('2g 24h毎', 2000, 24),
+            ]
+            grid_ft = np.zeros((len(dose_range_ft), len(gfr_range_ft)))
+
+            for i, (dlabel, d, ii_cmp) in enumerate(dose_range_ft):
+                nd_cmp = int(ndoses * ii_h / ii_cmp)
+                for j, g in enumerate(gfr_range_ft):
+                    df_hm = cached_sim(
+                        to_tuple({**patient, 'GFR': float(g)}),
+                        to_tuple({**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
+                                  'n_doses': nd_cmp, '_fast': True}))
+                    grid_ft[i, j] = calc_fTMIC(df_hm, mic_val, ii_cmp, nd_cmp)
+
+            fig_ft_hm = go.Figure(data=go.Heatmap(
+                z=grid_ft,
+                x=[str(int(g)) for g in gfr_range_ft],
+                y=[d[0] for d in dose_range_ft],
+                colorscale=[[0, '#e74c3c'], [0.6, '#f1c40f'], [1, '#27ae60']],
+                zmin=0, zmax=100,
+                text=np.round(grid_ft, 0).astype(int).astype(str),
+                texttemplate='%{text}%', textfont=dict(size=12),
+                colorbar=dict(title='%fT>MIC'),
+            ))
+            fig_ft_hm.update_layout(
+                title=f"%fT>MIC ヒートマップ (ALB={alb}g/dL, MIC={mic_val} mg/L, 目標: {ftmic_target}%以上)",
+                xaxis_title="GFR (mL/min)", yaxis_title="投与パターン",
+                xaxis=dict(type='category'), height=500,
+            )
+            st.plotly_chart(fig_ft_hm, use_container_width=True)
 
     elif hm_type == "最大 SI (GFR × 投与パターン)":
         with st.spinner("ヒートマップ計算中..."):
