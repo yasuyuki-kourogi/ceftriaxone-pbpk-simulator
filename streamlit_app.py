@@ -416,7 +416,7 @@ with tab2:
         fig_dc = go.Figure()
         for d, ii_cmp, col_c, lbl in dose_compare:
             dos_cmp = {**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
-                       'n_doses': int(ndoses * ii_h / ii_cmp)}
+                       'n_doses': max(3, int(ndoses * ii_h / ii_cmp))}
             df_d = cached_sim(to_tuple(patient), to_tuple(dos_cmp))
             ft_d = calc_fTMIC(df_d, mic_val, ii_cmp, dos_cmp['n_doses'])
             ss_d = df_d[(df_d['time'] >= t_start_plot) & (df_d['time'] <= t_end_plot)]
@@ -827,7 +827,7 @@ with tab5:
             grid_ft = np.zeros((len(dose_range_ft), len(gfr_range_ft)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range_ft):
-                nd_cmp = int(ndoses * ii_h / ii_cmp)
+                nd_cmp = max(3, int(ndoses * ii_h / ii_cmp))
                 for j, g in enumerate(gfr_range_ft):
                     df_hm = cached_sim(
                         to_tuple({**patient, 'GFR': float(g)}),
@@ -865,7 +865,7 @@ with tab5:
             grid_si = np.zeros((len(dose_range2), len(gfr_range2)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range2):
-                nd_cmp = int(ndoses * ii_h / ii_cmp)
+                nd_cmp = max(3, int(ndoses * ii_h / ii_cmp))
                 for j, g in enumerate(gfr_range2):
                     df_hm = cached_sim(
                         to_tuple({**patient, 'GFR': float(g)}),
