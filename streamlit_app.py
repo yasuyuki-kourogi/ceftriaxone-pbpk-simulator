@@ -745,8 +745,8 @@ with tab4:
 with tab5:
     hm_type = st.radio(
         "ヒートマップ種類",
-        ["%fT>MIC (ALB × GFR)", "%fT>MIC (GFR × 投与パターン)",
-         "最大 SI (GFR × 投与パターン)", "最大 SI (ALB × GFR)"],
+        ["%fT>MIC (ALB × GFR)", "最大 SI (ALB × GFR)",
+         "%fT>MIC (GFR × 投与パターン)", "最大 SI (GFR × 投与パターン)"],
         horizontal=True,
     )
 
@@ -780,6 +780,36 @@ with tab5:
                 xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_hm, use_container_width=True)
+
+    elif hm_type == "最大 SI (ALB × GFR)":
+        with st.spinner("ヒートマップ計算中..."):
+            alb_range2 = np.arange(1.5, 5.0, 0.5)
+            gfr_range3 = np.arange(15, 135, 15)
+            grid_si2 = np.zeros((len(alb_range2), len(gfr_range3)))
+
+            dosing_fast2 = {**dosing, '_fast': True}
+            for i, a in enumerate(alb_range2):
+                for j, g in enumerate(gfr_range3):
+                    df_hm2 = cached_sim(
+                        to_tuple({**patient, 'ALB': float(a), 'GFR': float(g)}),
+                        to_tuple(dosing_fast2))
+                    grid_si2[i, j] = calc_max_SI(df_hm2, ii_h, ndoses)
+
+            fig_si2 = go.Figure(data=go.Heatmap(
+                z=grid_si2,
+                x=[str(int(g)) for g in gfr_range3],
+                y=[f'{a:.1f}' for a in alb_range2],
+                colorscale=[[0, '#27ae60'], [0.5, '#f1c40f'], [1, '#e74c3c']],
+                text=np.round(grid_si2, 1).astype(str),
+                texttemplate='%{text}', textfont=dict(size=12),
+                colorbar=dict(title='最大SI'),
+            ))
+            fig_si2.update_layout(
+                title=f"最大飽和指数ヒートマップ (ALB × GFR)\n{dose_mg}mg {ii_h}時間毎, 食事{meals_per_day}回/日",
+                xaxis_title="GFR (mL/min)", yaxis_title="血清アルブミン値 (g/dL)",
+                xaxis=dict(type='category'), height=500,
+            )
+            st.plotly_chart(fig_si2, use_container_width=True)
 
     elif hm_type == "%fT>MIC (GFR × 投与パターン)":
         with st.spinner("ヒートマップ計算中..."):
@@ -819,7 +849,7 @@ with tab5:
             )
             st.plotly_chart(fig_ft_hm, use_container_width=True)
 
-    elif hm_type == "最大 SI (GFR × 投与パターン)":
+    else:  # 最大 SI (GFR × 投与パターン)
         with st.spinner("ヒートマップ計算中..."):
             gfr_range2 = np.arange(15, 135, 15)
             dose_range2 = [
@@ -855,36 +885,6 @@ with tab5:
                 xaxis=dict(type='category'), height=500,
             )
             st.plotly_chart(fig_si_hm, use_container_width=True)
-
-    else:  # 最大 SI (ALB × GFR)
-        with st.spinner("ヒートマップ計算中..."):
-            alb_range2 = np.arange(1.5, 5.0, 0.5)
-            gfr_range3 = np.arange(15, 135, 15)
-            grid_si2 = np.zeros((len(alb_range2), len(gfr_range3)))
-
-            dosing_fast2 = {**dosing, '_fast': True}
-            for i, a in enumerate(alb_range2):
-                for j, g in enumerate(gfr_range3):
-                    df_hm2 = cached_sim(
-                        to_tuple({**patient, 'ALB': float(a), 'GFR': float(g)}),
-                        to_tuple(dosing_fast2))
-                    grid_si2[i, j] = calc_max_SI(df_hm2, ii_h, ndoses)
-
-            fig_si2 = go.Figure(data=go.Heatmap(
-                z=grid_si2,
-                x=[str(int(g)) for g in gfr_range3],
-                y=[f'{a:.1f}' for a in alb_range2],
-                colorscale=[[0, '#27ae60'], [0.5, '#f1c40f'], [1, '#e74c3c']],
-                text=np.round(grid_si2, 1).astype(str),
-                texttemplate='%{text}', textfont=dict(size=12),
-                colorbar=dict(title='最大SI'),
-            ))
-            fig_si2.update_layout(
-                title=f"最大飽和指数ヒートマップ (ALB × GFR)\n{dose_mg}mg {ii_h}時間毎, 食事{meals_per_day}回/日",
-                xaxis_title="GFR (mL/min)", yaxis_title="血清アルブミン値 (g/dL)",
-                xaxis=dict(type='category'), height=500,
-            )
-            st.plotly_chart(fig_si2, use_container_width=True)
 
 # ==========================================================================
 # Tab 6: Model Info（ノートブック セル3相当）
