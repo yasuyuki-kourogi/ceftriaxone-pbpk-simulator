@@ -8,7 +8,7 @@
 #
 # References:
 #   Alasmari et al. (2023) Front Pharmacol 14:1200828
-#   Gijsen et al. (2023) J Antimicrob Chemother 78:1059-1067
+#   Ewoldt TMJ et al. (2023) J Antimicrob Chemother 78:1059-1065
 #   Shiffman et al. (1990) Gastroenterology 99:1772
 ###############################################################################
 
@@ -729,7 +729,7 @@ with tab6:
 
         st.subheader("非線形蛋白結合")
         st.info(
-            "Michaelis-Menten型アルブミン結合 (Gijsen et al. 2023):\n\n"
+            "Michaelis-Menten型アルブミン結合 (Ewoldt et al. 2023):\n\n"
             "Ct = Cu + Bmax × (ALB/ALB_ref)^θ × Cu / (Kd + Cu)\n\n"
             "- Bmax = 0.55 mmol/L (≈305 mg/L, 健常人)\n"
             "- Kd = 0.030 mmol/L (≈17 mg/L)\n"
@@ -758,7 +758,7 @@ with tab6:
             '指標': ['%fT>MIC', '飽和指数 (SI)'],
             '閾値': ['≥ 60%', '> 10.4 で沈殿リスク'],
             '根拠': [
-                'セファロスポリン系PK/PDターゲット (Craig 1998; Drusano 2004)',
+                'セファロスポリン系PK/PDターゲット (Craig 1998; Drusano 2003)',
                 '胆汁中Ca塩の結晶化実験に基づく参考値 (Shiffman et al. 1990)',
             ],
         }))
@@ -776,11 +776,11 @@ with tab6:
         st.subheader("参考文献")
         st.info(
             "- Alasmari F et al. (2023) *Front Pharmacol* 14:1200828 — PBPKモデル構造・Kp値・胆汁CL\n"
-            "- Gijsen M et al. (2023) *J Antimicrob Chemother* 78:1059 — 非線形蛋白結合パラメータ\n"
-            "- Schleibinger M et al. (2015) *Br J Clin Pharmacol* 80:1142 — 健常人PK・蛋白結合\n"
+            "- Ewoldt TMJ et al. (2023) *J Antimicrob Chemother* 78:1059-1065 — 遊離濃度予測モデル・蛋白結合\n"
+            "- Schleibinger M et al. (2015) *Br J Clin Pharmacol* 80:525-533 — ICU患者PK・蛋白結合\n"
             "- Shiffman ML et al. (1990) *Gastroenterology* 99:1772 — Ca-CTRX 溶解度積\n"
             "- Craig WA (1998) *Clin Infect Dis* 26:1-10 — β-ラクタム系PK/PDターゲット\n"
-            "- Drusano GL (2004) *Clin Infect Dis* 39:S45-S53 — 抗菌薬PK/PD総説\n"
+            "- Drusano GL (2003) *Clin Infect Dis* 36(Suppl 1):S42-S50 — 耐性抑制のためのPK/PD投与設計\n"
             "- Roberts JA et al. (2014) *Clin Infect Dis* 58:1072 — DALI study"
         )
 
