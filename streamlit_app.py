@@ -211,8 +211,8 @@ with st.sidebar:
     )
     meals_map = {"絶食": 0, "1回": 1, "2回": 2, "3回（通常）": 3}
     meals_per_day = meals_map[meals_option]
-    ca_bile = st.number_input("胆汁中 Ca²⁺ (mmol/L)", 1.0, 10.0, 5.0, 0.5)
-    gb_conc = st.slider("胆汁濃縮係数", 1, 10, 5, 1)
+    ca_bile = 5.0   # 胆嚢胆汁中 Ca²⁺ (mmol/L) 固定
+    gb_conc = 5     # 胆汁濃縮係数 固定
     
     st.markdown("---")
     st.header("投与設計")
