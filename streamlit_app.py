@@ -618,6 +618,14 @@ with tab4:
         with col_sa2:
             st.plotly_chart(fig_a2, use_container_width=True)
 
+        st.info(
+            "低アルブミン血症では非線形蛋白結合（Michaelis-Menten型）により"
+            "遊離型分率（fu）が上昇し、遊離型濃度が変動します。\n\n"
+            "- **fT>MIC**: fu上昇により遊離型濃度が上がるが、クリアランスも増加するため、"
+            "fT>MICへの影響は単純ではない\n"
+            "- **偽胆石リスク**: fu上昇 → 胆汁排泄増加 → 胆嚢内濃度上昇 → SIが上昇"
+        )
+
     elif sa_type == "GFR の影響":
         values = [15, 30, 60, 90, 120]
         colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
@@ -657,6 +665,14 @@ with tab4:
             st.plotly_chart(fig_g1, use_container_width=True)
         with col_sa2:
             st.plotly_chart(fig_g2, use_container_width=True)
+
+        st.info(
+            "GFR低下により腎クリアランス（GFR × fu）が減少し、"
+            "血漿中濃度が上昇します。\n\n"
+            "- **fT>MIC**: 濃度上昇により達成率が向上（CKD患者では減量不要な場合がある）\n"
+            "- **偽胆石リスク**: 腎排泄減少の代償として胆汁排泄の相対的寄与が増加し、"
+            "胆嚢内濃度が上昇する可能性がある"
+        )
 
     else:  # 食事回数の影響
         meal_values = [0, 1, 2, 3]
