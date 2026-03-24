@@ -355,7 +355,7 @@ with tab1:
                     f"{pct_renal:.1f}",
                     f"{pct_biliary:.1f}",
                 ],
-            })
+            }).set_index('パラメータ')
             st.table(summary)
 
 # ==========================================================================
@@ -756,23 +756,25 @@ with tab6:
 
     with col_m2:
         st.subheader("薬物パラメータ（セフトリアキソン）")
-        st.table(pd.DataFrame({
+        df_param = pd.DataFrame({
             'パラメータ': ['分子量', 'logP', 'pKa（酸性）', 'BP比',
                        'fu（公称値）', 'CLrenal', 'CLbiliary', '投与経路'],
             '値': ['554.58 g/mol', '-1.7', '2.7', '0.55',
                   '5-25%（濃度依存的）', '≈ GFR × fu（糸球体濾過）',
                   '0.22 L/h (3.67 mL/min)', '静脈内点滴のみ'],
-        }))
+        }).set_index('パラメータ')
+        st.table(df_param)
 
         st.subheader("評価指標の閾値")
-        st.table(pd.DataFrame({
+        df_thresh = pd.DataFrame({
             '指標': ['%fT>MIC', '飽和指数 (SI)'],
             '閾値': ['≥ 60%', '> 10.4 で沈殿リスク'],
             '根拠': [
                 'セファロスポリン系PK/PDターゲット (Craig 1998; Drusano 2003)',
                 '胆汁中Ca塩の結晶化実験に基づく参考値 (Shiffman et al. 1990)',
             ],
-        }))
+        }).set_index('指標')
+        st.table(df_thresh)
 
         st.subheader("制限事項")
         st.error(
