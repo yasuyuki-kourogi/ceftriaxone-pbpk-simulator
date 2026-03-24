@@ -641,12 +641,13 @@ with tab4:
             si_g = calc_max_SI(df_g, ii_h, ndoses)
             fig_g1.add_trace(go.Scatter(
                 x=df_g['time'], y=df_g['Cp_free'],
-                name=f'GFR={g} (fT={ft:.0f}%, SI={si_g:.1f})',
+                name=f'GFR={g} (fT={ft:.0f}%)',
                 line=dict(color=col_c, width=1.5),
             ))
             fig_g2.add_trace(go.Scatter(
                 x=df_g['time'], y=df_g['SI'],
-                name=f'GFR={g}', line=dict(color=col_c, width=1.5),
+                name=f'GFR={g} (SI={si_g:.1f})',
+                line=dict(color=col_c, width=1.5),
             ))
 
         fig_g1.add_hline(y=mic_val, line_dash='dash', line_color='black')
