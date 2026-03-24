@@ -525,11 +525,59 @@ with tab3:
 # ==========================================================================
 with tab4:
     sa_type = st.radio(
-        "感度分析パラメータ", ["血清アルブミン値の影響", "GFR の影響", "食事回数の影響"],
+        "感度分析パラメータ",
+        ["体重の影響", "血清アルブミン値の影響", "GFR の影響", "食事回数の影響"],
         horizontal=True,
     )
 
-    if sa_type == "GFR の影響":
+    if sa_type == "体重の影響":
+        values = [30, 40, 55, 70, 90]
+        colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
+        col_sa1, col_sa2 = st.columns(2)
+
+        fig_bw1 = go.Figure()
+        fig_bw2 = go.Figure()
+        for bw_v, col_c in zip(values, colors_5):
+            df_bw = cached_sim(to_tuple({**patient, 'BW': bw_v}), to_tuple(dosing))
+            ft = calc_fTMIC(df_bw, mic_val, ii_h, ndoses)
+            si_bw = calc_max_SI(df_bw, ii_h, ndoses)
+            fig_bw1.add_trace(go.Scatter(
+                x=df_bw['time'], y=df_bw['Cp_free'],
+                name=f'{bw_v}kg (fT={ft:.0f}%)',
+                line=dict(color=col_c, width=1.5),
+            ))
+            fig_bw2.add_trace(go.Scatter(
+                x=df_bw['time'], y=df_bw['SI'],
+                name=f'{bw_v}kg (SI={si_bw:.1f})',
+                line=dict(color=col_c, width=1.5),
+            ))
+
+        fig_bw1.add_hline(y=mic_val, line_dash='dash', line_color='black')
+        fig_bw1.update_layout(
+            title=f"体重の影響 — %fT>MIC (MIC={mic_val} mg/L)",
+            xaxis_title="時間 (h)", yaxis_title="遊離型血漿中濃度 (mg/L)",
+            yaxis=dict(rangemode='tozero'), height=450,
+        )
+        fig_bw2.add_hline(y=FIXED['SI_threshold'], line_dash='dash', line_color='#e74c3c',
+                         annotation_text=f"準安定限界 ({FIXED['SI_threshold']})")
+        fig_bw2.update_layout(
+            title="体重の影響 — 偽胆石リスク",
+            xaxis_title="時間 (h)", yaxis_title="飽和指数 (SI)",
+            height=450,
+        )
+
+        with col_sa1:
+            st.plotly_chart(fig_bw1, use_container_width=True)
+        with col_sa2:
+            st.plotly_chart(fig_bw2, use_container_width=True)
+
+        st.info(
+            "セフトリアキソンは固定用量（体重あたりではない）で投与されるため、"
+            "体重が軽い患者ほど血中濃度が高くなり、fT>MIC達成率が上昇します。"
+            "一方、胆嚢内濃度も上昇するため偽胆石リスクも増加します。"
+        )
+
+    elif sa_type == "GFR の影響":
         values = [15, 30, 60, 90, 120]
         colors_5 = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db']
         col_sa1, col_sa2 = st.columns(2)
