@@ -39,7 +39,7 @@ FIXED = {
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. ODE システム（ノートブック セル4（=Cell 5）と同一）
 # ─────────────────────────────────────────────────────────────────────────────
-def _pbpk_rhs(t, y, p, dose_schedule):
+def _pbpk_rhs(t, y, p, dose_schedule, meal_hours):
     IVEN, ART, VEN, LUNG, LIVER, KIDNEY, REST, GB, URINE, BILE_CUM = y
 
     MW = p['MW']; BP = p['BP']
@@ -92,7 +92,8 @@ def _pbpk_rhs(t, y, p, dose_schedule):
     dLIVER = Qli * (Cart - Cli / p['Kpli'] * BP) - Biliary_elim
     dKIDNEY = Qki * (Cart - Cki / p['Kpki'] * BP) - Renal_elim
     dREST = Qre * (Cart - Cre / p['Kpre'] * BP)
-    dGB = Biliary_elim * p['gb_conc_factor'] - p['gb_empty_rate'] * GB
+    gb_rate = _gb_empty_rate(t, meal_hours)
+    dGB = Biliary_elim * p['gb_conc_factor'] - gb_rate * GB
     dURINE = Renal_elim
     dBILE_CUM = Biliary_elim
 
@@ -102,8 +103,28 @@ def _pbpk_rhs(t, y, p, dose_schedule):
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. シミュレーション・解析関数（ノートブック セル6 と同一）
 # ─────────────────────────────────────────────────────────────────────────────
-def _meals_to_gb_rate(meals_per_day):
-    return 0.1 + meals_per_day * 0.5
+# 食事時刻のデフォルトパターン（時刻は 0–24h、毎日繰り返し）
+MEAL_PATTERNS = {
+    0: [],                    # 絶食
+    1: [12.0],                # 1回（昼）
+    2: [8.0, 18.0],           # 2回（朝・夕）
+    3: [8.0, 12.0, 18.0],     # 3回（朝・昼・夕）
+}
+
+# 胆嚢排出パラメータ
+GB_K_BASE = 0.1    # 基礎排出速度 (/h)
+GB_K_MEAL = 2.0    # 食事刺激排出速度 (/h)
+GB_MEAL_DUR = 1.0  # 食事刺激の持続時間 (h)
+
+
+def _gb_empty_rate(t, meal_hours):
+    """時刻 t における胆嚢排出速度定数を返す。
+    食事後 GB_MEAL_DUR 時間は CCK 刺激により排出が亢進する。"""
+    t_day = t % 24.0
+    for mh in meal_hours:
+        if mh <= t_day < mh + GB_MEAL_DUR:
+            return GB_K_BASE + GB_K_MEAL
+    return GB_K_BASE
 
 
 def run_simulation(patient, dosing, sim_duration_h=None):
@@ -116,10 +137,8 @@ def run_simulation(patient, dosing, sim_duration_h=None):
         sim_duration_h = ii_h * n_doses + 24
 
     pat = dict(patient)
-    if 'meals_per_day' in pat and 'gb_empty_rate' not in pat:
-        pat['gb_empty_rate'] = _meals_to_gb_rate(pat.pop('meals_per_day'))
-    elif 'meals_per_day' in pat:
-        pat.pop('meals_per_day')
+    meals_per_day = pat.pop('meals_per_day', 3)
+    meal_hours = tuple(MEAL_PATTERNS.get(meals_per_day, MEAL_PATTERNS[3]))
 
     p = {**FIXED, **pat}
     dose_schedule = [(i * ii_h, dose_mg, tinf_h) for i in range(n_doses)]
@@ -130,7 +149,7 @@ def run_simulation(patient, dosing, sim_duration_h=None):
     t_eval = t_eval[t_eval <= sim_duration_h]
 
     sol = solve_ivp(
-        fun=lambda t, y: _pbpk_rhs(t, y, p, dose_schedule),
+        fun=lambda t, y: _pbpk_rhs(t, y, p, dose_schedule, meal_hours),
         t_span=(0.0, sim_duration_h), y0=y0, t_eval=t_eval,
         method='LSODA', atol=1e-8 if fast else 1e-10,
         rtol=1e-6 if fast else 1e-8, max_step=0.5 if fast else 0.1,
@@ -203,11 +222,14 @@ with st.sidebar:
     gfr = st.slider("GFR (mL/min)", 15, 120, 45, 1)
     meals_option = st.selectbox(
         "食事回数（/日）",
-        ["絶食", "1回", "2回", "3回（通常）"],
+        ["絶食", "1回（昼）", "2回（朝・夕）", "3回（通常）"],
         index=0,
     )
-    meals_map = {"絶食": 0, "1回": 1, "2回": 2, "3回（通常）": 3}
+    meals_map = {"絶食": 0, "1回（昼）": 1, "2回（朝・夕）": 2, "3回（通常）": 3}
     meals_per_day = meals_map[meals_option]
+    if meals_per_day > 0:
+        meal_times_str = "、".join([f"{int(h)}時" for h in MEAL_PATTERNS[meals_per_day]])
+        st.caption(f"食事時刻: {meal_times_str}（食後{GB_MEAL_DUR:.0f}h胆嚢収縮）")
     ca_bile = 5.0   # 胆嚢胆汁中 Ca²⁺ (mmol/L) 固定
     gb_conc = 5     # 胆汁濃縮係数 固定
     
@@ -285,6 +307,15 @@ with tab1:
     pct_renal = df['cum_renal'].iloc[-1] / dose_total * 100
     pct_biliary = df['cum_biliary'].iloc[-1] / dose_total * 100
 
+    # AUC (定常状態1投与間隔, 台形法)
+    auc_total = np.trapz(ss['Cp_total'], ss['time']) if len(ss) >= 2 else 0.0
+    auc_free = np.trapz(ss['Cp_free'], ss['time']) if len(ss) >= 2 else 0.0
+
+    # SI 関連指標 (定常状態)
+    ss_si = df[df['time'] >= ii_h * (ndoses - 1)]
+    si_above_time = (ss_si['SI'] > FIXED['SI_threshold']).sum() / len(ss_si) * 100 if len(ss_si) > 0 else 0.0
+    auc_si = np.trapz(ss_si['SI'], ss_si['time']) if len(ss_si) >= 2 else 0.0
+
     col_s1, col_s2, col_s3, col_s4 = st.columns(4)
     if len(ss) >= 2:
         col_s1.metric("Cmax total", f"{ss['Cp_total'].max():.1f} mg/L")
@@ -342,6 +373,7 @@ with tab1:
                 'パラメータ': [
                     'Cmax total (mg/L)', 'Cmin total (mg/L)',
                     'Cmax free (mg/L)', 'Cmin free (mg/L)',
+                    'AUCss total (mg·h/L)', 'AUCss free (mg·h/L)',
                     'fu at Cmax (%)', 'fu at Cmin (%)',
                     '腎排泄 (%dose)', '胆汁排泄 (%dose)',
                 ],
@@ -350,6 +382,8 @@ with tab1:
                     f"{ss['Cp_total'].min():.1f}",
                     f"{ss['Cp_free'].max():.2f}",
                     f"{ss['Cp_free'].min():.3f}",
+                    f"{auc_total:.1f}",
+                    f"{auc_free:.2f}",
                     f"{ss.loc[ss['Cp_total'].idxmax(), 'FU'] * 100:.1f}",
                     f"{ss.loc[ss['Cp_total'].idxmin(), 'FU'] * 100:.1f}",
                     f"{pct_renal:.1f}",
@@ -500,16 +534,11 @@ with tab3:
         st.plotly_chart(fig_cb, use_container_width=True)
 
     # Risk assessment
-    t_ss_start = ii_h * (ndoses - 1)
-    t_ss_end = ii_h * ndoses
-    ss_si = df[(df['time'] >= t_ss_start) & (df['time'] <= t_ss_end)]
-    pct_above = (ss_si['SI'] > FIXED['SI_threshold']).sum() / len(ss_si) * 100 if len(ss_si) > 0 else 0
-
     if max_si < 1.0:
         risk = "極低（Ksp未満）"; bg = "#eaf4fd"
     elif max_si < FIXED['SI_threshold']:
         risk = "低（準安定域内）"; bg = "#eaf4fd"
-    elif pct_above < 30:
+    elif si_above_time < 30:
         risk = "中（一過性に超過）"; bg = "#fef5e7"
     else:
         risk = "高（持続的超過）"; bg = "#fde8e8"
@@ -519,8 +548,9 @@ with tab3:
         padding:12px; border-radius:4px;">
         <strong>偽胆石リスク: {risk}</strong><br>
         最大飽和指数 = <strong>{max_si:.2f}</strong>（準安定限界: {FIXED['SI_threshold']}）<br>
+        SI-AUC（定常状態） = <strong>{auc_si:.1f}</strong> · h<br>
         胆汁中 CTRX 最高濃度 = <strong>{df['C_bile'].max():.0f} mg/L</strong><br>
-        準安定限界超過時間: <strong>{pct_above:.0f}%</strong><br>
+        準安定限界超過時間: <strong>{si_above_time:.0f}%</strong><br>
         {dose_mg} mg q{ii_h}h | Ca²⁺ = {ca_bile:.1f} mmol/L | GFR = {gfr} | 食事 {meals_per_day}回/日
         </div>""",
         unsafe_allow_html=True,
