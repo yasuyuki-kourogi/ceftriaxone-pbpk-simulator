@@ -1012,7 +1012,7 @@ with tab6:
         st.info(
             "CLbiliary（見かけのCL）= 0.22 L/h @ fu_ref = 0.05\n\n"
             "CLint = CLbiliary / fu_ref → 遊離型濃度に適用\n\n"
-            "**低ALB時**: fu上昇 → 胆汁排泄が増加 → SI上昇"
+            "低ALB時: fu上昇 → 胆汁排泄が増加 → SI上昇"
         )
 
     with col_m2:
