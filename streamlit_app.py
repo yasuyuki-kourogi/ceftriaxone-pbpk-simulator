@@ -99,7 +99,8 @@ def _pbpk_rhs(t, y, p, dose_schedule, meal_hours):
     dKIDNEY = Qki * (Cart - Cki / p['Kpki'] * BP) - Renal_elim
     dREST = Qre * (Cart - Cre / p['Kpre'] * BP)
     gb_rate = _gb_empty_rate(t, meal_hours)
-    dGB = Biliary_elim * p['gb_frac'] - gb_rate * GB
+    frac = _gb_frac(t, meal_hours)
+    dGB = Biliary_elim * frac - gb_rate * GB
     dURINE = Renal_elim
     dBILE_CUM = Biliary_elim
 
@@ -123,10 +124,12 @@ DOSE_HOUR = {
     12: [9.0, 21.0],    # q12h: 9時, 21時
 }
 
-# 胆嚢排出パラメータ
+# 胆嚢パラメータ
 GB_K_BASE = 0.05   # 基礎排出速度 (/h) — 食間のMMCによる微量排出
 GB_K_MEAL = 1.0    # 食事刺激排出速度 (/h) — CCK刺激（食後60-70%排出を再現）
 GB_MEAL_DUR = 2.0  # 食事刺激の持続時間 (h) — 生理学的に1-2h
+GB_FRAC_FASTING = 0.5   # 空腹時の胆嚢到達率（Oddi括約筋閉鎖、大部分が胆嚢へ）
+GB_FRAC_MEAL = 0.0      # 食後の胆嚢到達率（Oddi括約筋開放、十二指腸へ直接流入）
 
 
 def _gb_empty_rate(t, meal_hours):
@@ -137,6 +140,17 @@ def _gb_empty_rate(t, meal_hours):
         if mh <= t_day < mh + GB_MEAL_DUR:
             return GB_K_BASE + GB_K_MEAL
     return GB_K_BASE
+
+
+def _gb_frac(t, meal_hours):
+    """時刻 t における胆嚢到達率を返す。
+    空腹時: Oddi括約筋閉鎖 → 胆汁は胆嚢へ流入。
+    食後: CCK → Oddi括約筋開放 → 胆汁は十二指腸へ直接流入。"""
+    t_day = t % 24.0
+    for mh in meal_hours:
+        if mh <= t_day < mh + GB_MEAL_DUR:
+            return GB_FRAC_MEAL
+    return GB_FRAC_FASTING
 
 
 def run_simulation(patient, dosing, sim_duration_h=None):
@@ -271,7 +285,7 @@ with st.sidebar:
         meal_times_str = "、".join([f"{int(h)}時" for h in MEAL_PATTERNS[meals_per_day]])
         st.caption(f"食事時刻: {meal_times_str}（食後{GB_MEAL_DUR:.1f}h胆嚢収縮）")
     ca_bile = 5.0   # 胆嚢胆汁中 Ca²⁺ (mmol/L) 固定
-    gb_frac = 0.35  # 胆嚢到達率（胆汁排泄のうち胆嚢に貯留する割合）
+    # 胆嚢到達率は時刻依存（_gb_frac関数で制御: 空腹時0.5, 食後0.0）
     
     st.markdown("---")
     st.header("投与設計")
@@ -304,7 +318,7 @@ with st.sidebar:
 # Patient / dosing dicts
 patient = {
     'BW': bw, 'ALB': alb, 'GFR': gfr,
-    'Ca_bile': ca_bile, 'gb_frac': gb_frac,
+    'Ca_bile': ca_bile,
     'meals_per_day': meals_per_day,
 }
 dosing = {
@@ -1025,7 +1039,7 @@ with tab6:
         st.subheader("制限事項")
         st.error(
             "- Kp値はPK-Sim最適化値ではなく推定値\n"
-            "- 胆嚢到達率（0.35）および排出パラメータ（基礎排出・食事刺激速度）は仮定値\n"
+            "- 胆嚢到達率（空腹時0.5/食後0.0）および排出パラメータは仮定値\n"
             "- 腸肝循環は臨床的に無視できるため省略（腸管内で分解）\n"
             "- 腎排泄は糸球体濾過のみ（尿細管分泌省略）\n"
             "- 個体間変動（IIV）未実装\n"
@@ -1052,7 +1066,7 @@ with tab6:
 | **腎排泄** | 糸球体濾過のみ（GFR × fu） | セフトリアキソンは一部尿細管分泌もある |
 | **胆汁クリアランス** | 遊離型血漿濃度に比例（well-stirred model: CLint × Cu） | 低抽出率薬物の原則に従い、遊離型濃度に依存 |
 | **蛋白結合** | 飽和型1サイト結合モデル | 実臨床で広く受け入れられているモデル |
-| **胆嚢到達率** | 胆汁排泄量 × 0.35（残りは総胆管経由で直接排出） | 実際は食事・胆嚢機能により変動 |
+| **胆嚢到達率** | 時刻依存（空腹時0.5 / 食後0.0、Oddi括約筋の開閉を反映） | 個人差・食事内容で変動 |
 | **胆嚢排出** | 食事時刻依存（CCK刺激、基礎排出+食後亢進） | 食事内容・個人差で変動、パラメータは仮定値 |
 | **腸肝循環** | 省略（セフトリアキソンは腸管内で分解されるため臨床的に無視可） | 他の薬物では考慮が必要な場合あり |
 """)
