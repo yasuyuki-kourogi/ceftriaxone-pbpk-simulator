@@ -262,10 +262,10 @@ with st.sidebar:
     gfr = st.slider("GFR (mL/min)", 15, 120, 45, 1)
     meals_option = st.selectbox(
         "食事回数（/日）",
-        ["絶食", "1回（昼）", "2回（朝・夕）", "3回（通常）"],
+        ["絶食", "1回（昼）", "2回（朝・夕）", "3回（朝・昼・夕）"],
         index=0,
     )
-    meals_map = {"絶食": 0, "1回（昼）": 1, "2回（朝・夕）": 2, "3回（通常）": 3}
+    meals_map = {"絶食": 0, "1回（昼）": 1, "2回（朝・夕）": 2, "3回（朝・昼・夕）": 3}
     meals_per_day = meals_map[meals_option]
     if meals_per_day > 0:
         meal_times_str = "、".join([f"{int(h)}時" for h in MEAL_PATTERNS[meals_per_day]])
@@ -434,7 +434,7 @@ with tab1:
                     f"{pct_biliary:.1f}",
                 ],
             }).set_index('パラメータ')
-            st.table(summary)
+            st.dataframe(summary, use_container_width=True)
 
 # ==========================================================================
 # Tab 2: %fT>MIC Analysis（ノートブック セル11相当）
@@ -979,7 +979,7 @@ with tab6:
             "- 肝臓（胆汁排泄: well-stirred model）\n"
             "- 腎臓（GFR依存の腎クリアランス）\n"
             "- 残余組織（一括）\n"
-            "- 胆嚢（胆汁蓄積・濃縮）\n\n"
+            "- 胆嚢（食事時刻依存の排出モデル）\n\n"
             "全組織: well-stirred model（灌流律速型分布）\n\n"
             "Kp値: Poulin-Theil法に基づく推定値"
         )
@@ -1009,7 +1009,7 @@ with tab6:
                   '5-25%（濃度依存的）', '≈ GFR × fu（糸球体濾過）',
                   '0.22 L/h (3.67 mL/min)', '静脈内点滴のみ'],
         }).set_index('パラメータ')
-        st.table(df_param)
+        st.dataframe(df_param, use_container_width=True)
 
         st.subheader("評価指標の閾値")
         df_thresh = pd.DataFrame({
@@ -1020,12 +1020,12 @@ with tab6:
                 '胆汁中Ca塩の結晶化実験に基づく参考値 (Shiffman et al. 1990)',
             ],
         }).set_index('指標')
-        st.table(df_thresh)
+        st.dataframe(df_thresh, use_container_width=True)
 
         st.subheader("制限事項")
         st.error(
             "- Kp値はPK-Sim最適化値ではなく推定値\n"
-            "- 胆嚢排出パラメータ（基礎排出・食事刺激速度）は仮定値\n"
+            "- 胆嚢到達率（0.35）および排出パラメータ（基礎排出・食事刺激速度）は仮定値\n"
             "- 腸肝循環は臨床的に無視できるため省略（腸管内で分解）\n"
             "- 腎排泄は糸球体濾過のみ（尿細管分泌省略）\n"
             "- 個体間変動（IIV）未実装\n"
