@@ -117,6 +117,12 @@ MEAL_PATTERNS = {
     3: [8.0, 12.0, 18.0],     # 3回（朝・昼・夕）
 }
 
+# 投与時刻パターン（時刻は 0–24h）
+DOSE_HOUR = {
+    24: [9.0],          # q24h: 9時
+    12: [9.0, 21.0],    # q12h: 9時, 21時
+}
+
 # 胆嚢排出パラメータ
 GB_K_BASE = 0.1    # 基礎排出速度 (/h)
 GB_K_MEAL = 2.0    # 食事刺激排出速度 (/h)
@@ -139,15 +145,27 @@ def run_simulation(patient, dosing, sim_duration_h=None):
     ii_h = dosing['ii_h']
     n_doses = dosing['n_doses']
 
-    if sim_duration_h is None:
-        sim_duration_h = ii_h * n_doses + 24
-
     pat = dict(patient)
     meals_per_day = pat.pop('meals_per_day', 3)
     meal_hours = tuple(MEAL_PATTERNS.get(meals_per_day, MEAL_PATTERNS[3]))
 
+    # 投与スケジュール: 時刻ベース (q24h→9時, q12h→9時/21時)
+    dose_times_per_day = DOSE_HOUR.get(ii_h, [9.0])
+    dose_schedule = []
+    doses_added = 0
+    day = 0
+    while doses_added < n_doses:
+        for dh in dose_times_per_day:
+            if doses_added >= n_doses:
+                break
+            dose_schedule.append((day * 24.0 + dh, dose_mg, tinf_h))
+            doses_added += 1
+        day += 1
+
+    if sim_duration_h is None:
+        sim_duration_h = dose_schedule[-1][0] + 24
+
     p = {**FIXED, **pat}
-    dose_schedule = [(i * ii_h, dose_mg, tinf_h) for i in range(n_doses)]
     y0 = [0.0] * 10
     fast = dosing.get('_fast', False)
     dt = 0.5 if fast else 0.1
@@ -193,18 +211,34 @@ def run_simulation(patient, dosing, sim_duration_h=None):
     })
 
 
+def _last_dose_time(ii_h, n_doses):
+    """最終投与の開始時刻を返す（投与スケジュールと同じロジック）。"""
+    dose_times_per_day = DOSE_HOUR.get(ii_h, [9.0])
+    doses_added = 0
+    day = 0
+    last_t = 0.0
+    while doses_added < n_doses:
+        for dh in dose_times_per_day:
+            if doses_added >= n_doses:
+                break
+            last_t = day * 24.0 + dh
+            doses_added += 1
+        day += 1
+    return last_t
+
+
 def calc_fTMIC(df, mic, ii_h, n_doses):
-    t_start = ii_h * (n_doses - 1)
-    t_end = ii_h * n_doses
-    ss = df[(df['time'] >= t_start) & (df['time'] <= t_end)]
+    t_last = _last_dose_time(ii_h, n_doses)
+    t_prev = _last_dose_time(ii_h, n_doses - 1) if n_doses > 1 else t_last - ii_h
+    ss = df[(df['time'] >= t_prev) & (df['time'] <= t_last)]
     if len(ss) < 2:
         return np.nan
     return np.sum(ss['Cp_free'] > mic) / len(ss) * 100.0
 
 
 def calc_max_SI(df, ii_h, n_doses):
-    t_start = ii_h * (n_doses - 1)
-    ss = df[df['time'] >= t_start]
+    t_prev = _last_dose_time(ii_h, n_doses - 1) if n_doses > 1 else 0.0
+    ss = df[df['time'] >= t_prev]
     return float(ss['SI'].max())
 
 
@@ -245,6 +279,8 @@ with st.sidebar:
     tinf_min = st.selectbox("点滴時間 (分)", [30, 60], index=0)
     ii_h = st.selectbox("投与間隔 (時間)", [12, 24], index=1)
     ndoses = int(7 * 24 / ii_h)  # 治療期間7日固定
+    dose_times_str = "、".join([f"{int(h)}時" for h in DOSE_HOUR[ii_h]])
+    st.caption(f"投与時刻: {dose_times_str}（7日間）")
 
     st.markdown("---")
     st.header("感染症パラメータ")
@@ -306,7 +342,9 @@ with tab1:
     df = cached_sim(to_tuple(patient), to_tuple(dosing))
 
     # PK Summary
-    ss = df[(df['time'] >= ii_h * (ndoses - 1)) & (df['time'] <= ii_h * ndoses)]
+    t_last = _last_dose_time(ii_h, ndoses)
+    t_prev = _last_dose_time(ii_h, ndoses - 1) if ndoses > 1 else t_last - ii_h
+    ss = df[(df['time'] >= t_prev) & (df['time'] <= t_last)]
     ftmic = calc_fTMIC(df, mic_val, ii_h, ndoses)
     max_si = calc_max_SI(df, ii_h, ndoses)
     dose_total = dose_mg * ndoses
@@ -318,7 +356,7 @@ with tab1:
     auc_free = _trapz(ss['Cp_free'], ss['time']) if len(ss) >= 2 else 0.0
 
     # SI 関連指標 (定常状態)
-    ss_si = df[df['time'] >= ii_h * (ndoses - 1)]
+    ss_si = df[df['time'] >= t_prev]
     si_above_time = (ss_si['SI'] > FIXED['SI_threshold']).sum() / len(ss_si) * 100 if len(ss_si) > 0 else 0.0
     auc_si = _trapz(ss_si['SI'], ss_si['time']) if len(ss_si) >= 2 else 0.0
 
@@ -406,8 +444,9 @@ with tab2:
 
     with col_ftmic1:
         # 定常状態の遊離型濃度推移
-        t_start_plot = ii_h * max(ndoses - 2, 0)
-        t_end_plot = ii_h * ndoses
+        t_prev2 = _last_dose_time(ii_h, max(ndoses - 2, 1)) if ndoses > 2 else 0.0
+        t_end_plot = t_last
+        t_start_plot = t_prev2
         ss_plot = df[(df['time'] >= t_start_plot) & (df['time'] <= t_end_plot)]
 
         fig_ft = go.Figure()
@@ -452,11 +491,14 @@ with tab2:
         ]
         fig_dc = go.Figure()
         for d, ii_cmp, col_c, lbl in dose_compare:
+            nd_cmp = max(3, int(7 * 24 / ii_cmp))  # 7日間固定
             dos_cmp = {**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
-                       'n_doses': max(3, int(ndoses * ii_h / ii_cmp))}
+                       'n_doses': nd_cmp}
             df_d = cached_sim(to_tuple(patient), to_tuple(dos_cmp))
-            ft_d = calc_fTMIC(df_d, mic_val, ii_cmp, dos_cmp['n_doses'])
-            ss_d = df_d[(df_d['time'] >= t_start_plot) & (df_d['time'] <= t_end_plot)]
+            ft_d = calc_fTMIC(df_d, mic_val, ii_cmp, nd_cmp)
+            t_cmp_last = _last_dose_time(ii_cmp, nd_cmp)
+            t_cmp_prev2 = _last_dose_time(ii_cmp, max(nd_cmp - 2, 1)) if nd_cmp > 2 else 0.0
+            ss_d = df_d[(df_d['time'] >= t_cmp_prev2) & (df_d['time'] <= t_cmp_last)]
             fig_dc.add_trace(go.Scatter(
                 x=ss_d['time'], y=ss_d['Cp_free'],
                 name=f'{lbl} ({ft_d:.0f}%)', line=dict(color=col_c, width=1.8),
@@ -860,7 +902,7 @@ with tab5:
             grid_ft = np.zeros((len(dose_range_ft), len(gfr_range_ft)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range_ft):
-                nd_cmp = max(3, int(ndoses * ii_h / ii_cmp))
+                nd_cmp = max(3, int(7 * 24 / ii_cmp))
                 for j, g in enumerate(gfr_range_ft):
                     df_hm = cached_sim(
                         to_tuple({**patient, 'GFR': float(g)}),
@@ -898,7 +940,7 @@ with tab5:
             grid_si = np.zeros((len(dose_range2), len(gfr_range2)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range2):
-                nd_cmp = max(3, int(ndoses * ii_h / ii_cmp))
+                nd_cmp = max(3, int(7 * 24 / ii_cmp))
                 for j, g in enumerate(gfr_range2):
                     df_hm = cached_sim(
                         to_tuple({**patient, 'GFR': float(g)}),
