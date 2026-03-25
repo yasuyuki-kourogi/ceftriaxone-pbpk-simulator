@@ -14,6 +14,12 @@
 
 import numpy as np
 import pandas as pd
+
+# NumPy 2.0 互換: np.trapz → np.trapezoid
+try:
+    _trapz = np.trapezoid  # type: ignore[attr-defined]
+except AttributeError:
+    _trapz = np.trapz  # type: ignore[attr-defined]
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -308,13 +314,13 @@ with tab1:
     pct_biliary = df['cum_biliary'].iloc[-1] / dose_total * 100
 
     # AUC (定常状態1投与間隔, 台形法)
-    auc_total = np.trapz(ss['Cp_total'], ss['time']) if len(ss) >= 2 else 0.0
-    auc_free = np.trapz(ss['Cp_free'], ss['time']) if len(ss) >= 2 else 0.0
+    auc_total = _trapz(ss['Cp_total'], ss['time']) if len(ss) >= 2 else 0.0
+    auc_free = _trapz(ss['Cp_free'], ss['time']) if len(ss) >= 2 else 0.0
 
     # SI 関連指標 (定常状態)
     ss_si = df[df['time'] >= ii_h * (ndoses - 1)]
     si_above_time = (ss_si['SI'] > FIXED['SI_threshold']).sum() / len(ss_si) * 100 if len(ss_si) > 0 else 0.0
-    auc_si = np.trapz(ss_si['SI'], ss_si['time']) if len(ss_si) >= 2 else 0.0
+    auc_si = _trapz(ss_si['SI'], ss_si['time']) if len(ss_si) >= 2 else 0.0
 
     col_s1, col_s2, col_s3, col_s4 = st.columns(4)
     if len(ss) >= 2:
