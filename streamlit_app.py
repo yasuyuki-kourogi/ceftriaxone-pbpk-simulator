@@ -99,7 +99,7 @@ def _pbpk_rhs(t, y, p, dose_schedule, meal_hours):
     dKIDNEY = Qki * (Cart - Cki / p['Kpki'] * BP) - Renal_elim
     dREST = Qre * (Cart - Cre / p['Kpre'] * BP)
     gb_rate = _gb_empty_rate(t, meal_hours)
-    dGB = Biliary_elim * p['gb_conc_factor'] - gb_rate * GB
+    dGB = Biliary_elim * p['gb_frac'] - gb_rate * GB
     dURINE = Renal_elim
     dBILE_CUM = Biliary_elim
 
@@ -271,7 +271,7 @@ with st.sidebar:
         meal_times_str = "、".join([f"{int(h)}時" for h in MEAL_PATTERNS[meals_per_day]])
         st.caption(f"食事時刻: {meal_times_str}（食後{GB_MEAL_DUR:.1f}h胆嚢収縮）")
     ca_bile = 5.0   # 胆嚢胆汁中 Ca²⁺ (mmol/L) 固定
-    gb_conc = 1     # 胆汁濃縮係数（排出速度を生理学的値にしたため調整）
+    gb_frac = 0.35  # 胆嚢到達率（胆汁排泄のうち胆嚢に貯留する割合）
     
     st.markdown("---")
     st.header("投与設計")
@@ -304,7 +304,7 @@ with st.sidebar:
 # Patient / dosing dicts
 patient = {
     'BW': bw, 'ALB': alb, 'GFR': gfr,
-    'Ca_bile': ca_bile, 'gb_conc_factor': gb_conc,
+    'Ca_bile': ca_bile, 'gb_frac': gb_frac,
     'meals_per_day': meals_per_day,
 }
 dosing = {
@@ -1052,7 +1052,7 @@ with tab6:
 | **腎排泄** | 糸球体濾過のみ（GFR × fu） | セフトリアキソンは一部尿細管分泌もある |
 | **胆汁クリアランス** | 遊離型血漿濃度に比例（well-stirred model: CLint × Cu） | 低抽出率薬物の原則に従い、遊離型濃度に依存 |
 | **蛋白結合** | 飽和型1サイト結合モデル | 実臨床で広く受け入れられているモデル |
-| **胆嚢濃縮** | 胆汁排泄量 × 固定係数 | 胆嚢での水分再吸収による経時的濃縮 |
+| **胆嚢到達率** | 胆汁排泄量 × 0.35（残りは総胆管経由で直接排出） | 実際は食事・胆嚢機能により変動 |
 | **胆嚢排出** | 食事時刻依存（CCK刺激、基礎排出+食後亢進） | 食事内容・個人差で変動、パラメータは仮定値 |
 | **腸肝循環** | 省略（セフトリアキソンは腸管内で分解されるため臨床的に無視可） | 他の薬物では考慮が必要な場合あり |
 """)
