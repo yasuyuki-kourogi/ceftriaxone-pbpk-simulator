@@ -124,9 +124,9 @@ DOSE_HOUR = {
 }
 
 # 胆嚢排出パラメータ
-GB_K_BASE = 0.1    # 基礎排出速度 (/h)
-GB_K_MEAL = 2.0    # 食事刺激排出速度 (/h)
-GB_MEAL_DUR = 1.0  # 食事刺激の持続時間 (h)
+GB_K_BASE = 0.05   # 基礎排出速度 (/h) — 食間のMMCによる微量排出
+GB_K_MEAL = 1.0    # 食事刺激排出速度 (/h) — CCK刺激（食後60-70%排出を再現）
+GB_MEAL_DUR = 2.0  # 食事刺激の持続時間 (h) — 生理学的に1-2h
 
 
 def _gb_empty_rate(t, meal_hours):
@@ -269,9 +269,9 @@ with st.sidebar:
     meals_per_day = meals_map[meals_option]
     if meals_per_day > 0:
         meal_times_str = "、".join([f"{int(h)}時" for h in MEAL_PATTERNS[meals_per_day]])
-        st.caption(f"食事時刻: {meal_times_str}（食後{GB_MEAL_DUR:.0f}h胆嚢収縮）")
+        st.caption(f"食事時刻: {meal_times_str}（食後{GB_MEAL_DUR:.1f}h胆嚢収縮）")
     ca_bile = 5.0   # 胆嚢胆汁中 Ca²⁺ (mmol/L) 固定
-    gb_conc = 5     # 胆汁濃縮係数 固定
+    gb_conc = 1     # 胆汁濃縮係数（排出速度を生理学的値にしたため調整）
     
     st.markdown("---")
     st.header("投与設計")
