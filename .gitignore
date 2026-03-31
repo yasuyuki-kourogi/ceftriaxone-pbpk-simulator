@@ -29,3 +29,7 @@ __pycache__/
 卒論雛形.md
 卒論構成.md
 仮想患者シナリオ.pdf
+ctrx_pbpk_model_structure.drawio
+ctrx_pbpk_model_structure.pdf
+.gitignore
+ctrx_pbpk_model_structure.svg
