@@ -290,11 +290,11 @@ with st.sidebar:
     st.markdown("---")
     st.header("投与設計")
     dose_mg = st.selectbox("1回投与量 (mg)", [500, 1000, 1500, 2000], index=1)
-    tinf_min = st.selectbox("点滴時間 (分)", [30, 60], index=0)
+    tinf_min = 30  # 添付文書準拠: 点滴静注30分
     ii_h = st.selectbox("投与間隔 (時間)", [12, 24], index=1)
     ndoses = int(7 * 24 / ii_h)  # 治療期間7日固定
     dose_times_str = "、".join([f"{int(h)}時" for h in DOSE_HOUR[ii_h]])
-    st.caption(f"投与時刻: {dose_times_str}（7日間）")
+    st.caption(f"投与時刻: {dose_times_str}（7日間、点滴30分）")
 
     st.markdown("---")
     st.header("感染症パラメータ")
@@ -497,18 +497,18 @@ with tab2:
     with col_ftmic2:
         # 投与量・投与間隔比較（5パターン）
         dose_compare = [
-            (2000, 12, '#c0392b', '2g 12h毎'),
-            (2000, 24, '#e74c3c', '2g 24h毎'),
-            (1500, 12, '#8e44ad', '1.5g 12h毎'),
-            (1500, 24, '#9b59b6', '1.5g 24h毎'),
-            (1000, 12, '#2980b9', '1g 12h毎'),
-            (1000, 24, '#2ecc71', '1g 24h毎'),
-            (500, 12, '#e67e22', '0.5g 12h毎'),
-            (500, 24, '#3498db', '0.5g 24h毎'),
+            (2000, 12, '#d62728', 'solid',  '2g q12h'),
+            (2000, 24, '#d62728', 'dash',   '2g q24h'),
+            (1500, 12, '#9467bd', 'solid',  '1.5g q12h'),
+            (1500, 24, '#9467bd', 'dash',   '1.5g q24h'),
+            (1000, 12, '#1f77b4', 'solid',  '1g q12h'),
+            (1000, 24, '#1f77b4', 'dash',   '1g q24h'),
+            (500,  12, '#ff7f0e', 'solid',  '0.5g q12h'),
+            (500,  24, '#ff7f0e', 'dash',   '0.5g q24h'),
         ]
         fig_dc = go.Figure()
-        for d, ii_cmp, col_c, lbl in dose_compare:
-            nd_cmp = max(3, int(7 * 24 / ii_cmp))  # 7日間固定
+        for d, ii_cmp, col_c, dash_style, lbl in dose_compare:
+            nd_cmp = max(3, int(7 * 24 / ii_cmp))
             dos_cmp = {**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
                        'n_doses': nd_cmp}
             df_d = cached_sim(to_tuple(patient), to_tuple(dos_cmp))
@@ -518,7 +518,8 @@ with tab2:
             ss_d = df_d[(df_d['time'] >= t_cmp_prev2) & (df_d['time'] <= t_cmp_last)]
             fig_dc.add_trace(go.Scatter(
                 x=ss_d['time'], y=ss_d['Cp_free'],
-                name=f'{lbl} ({ft_d:.0f}%)', line=dict(color=col_c, width=1.8),
+                name=f'{lbl} ({ft_d:.0f}%)',
+                line=dict(color=col_c, width=2.2, dash=dash_style),
             ))
         fig_dc.add_hline(y=mic_val, line_dash='dash', line_color='black',
                          annotation_text=f'MIC = {mic_val} mg/L')
