@@ -294,7 +294,7 @@ with st.sidebar:
     ii_h = st.selectbox("投与間隔 (時間)", [12, 24], index=1)
     ndoses = int(7 * 24 / ii_h)  # 治療期間7日固定
     dose_times_str = "、".join([f"{int(h)}時" for h in DOSE_HOUR[ii_h]])
-    st.caption(f"投与時刻: {dose_times_str}（7日間、点滴30分）")
+    st.caption(f"投与時刻: {dose_times_str}（7日間、点滴時間30分）")
 
     st.markdown("---")
     st.header("感染症パラメータ")
