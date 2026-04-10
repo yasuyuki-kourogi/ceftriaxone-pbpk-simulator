@@ -520,10 +520,9 @@ with tab2:
                 name=f'{lbl}（%fT>MIC {ft_d:.0f}%）',
                 line=dict(color=col_c, width=2),
             ))
-        fig_dc.add_hline(y=mic_val, line_dash='dash', line_color='black',
-                         annotation_text=f'MIC = {mic_val} mg/L')
+        fig_dc.add_hline(y=mic_val, line_dash='dash', line_color='black')
         fig_dc.update_layout(
-            title=f"投与量比較 (ALB={alb}, GFR={gfr})",
+            title=f"投与量比較 (ALB={alb}, GFR={gfr}, MIC={mic_val} mg/L)",
             xaxis_title="時間 (h)", yaxis_title="遊離型血漿中濃度 (mg/L)",
             yaxis=dict(rangemode='tozero'),
             height=450, margin=dict(t=60, b=40),
