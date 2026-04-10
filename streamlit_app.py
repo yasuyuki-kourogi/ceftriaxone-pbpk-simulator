@@ -124,6 +124,15 @@ DOSE_HOUR = {
     12: [9.0, 21.0],    # q12h: 9時, 21時
 }
 
+REGIMEN_PATTERNS = [
+    ('0.5 gを24時間ごと', 500, 24, '#17becf'),
+    ('0.5 gを12時間ごと', 500, 12, '#8c564b'),
+    ('1 gを24時間ごと', 1000, 24, '#2ca02c'),
+    ('1 gを12時間ごと', 1000, 12, '#1f77b4'),
+    ('2 gを24時間ごと', 2000, 24, '#ff7f0e'),
+    ('2 gを12時間ごと', 2000, 12, '#d62728'),
+]
+
 # 胆嚢パラメータ
 GB_K_BASE = 0.05   # 基礎排出速度 (/h) — 食間のMMCによる微量排出
 GB_K_MEAL = 1.0    # 食事刺激排出速度 (/h) — CCK刺激（食後60-70%排出を再現）
@@ -495,19 +504,9 @@ with tab2:
         st.plotly_chart(fig_ft, use_container_width=True)
 
     with col_ftmic2:
-        # 投与量・投与間隔比較（5パターン）
-        dose_compare = [
-            (2000, 24, '#ff7f0e', '2g q24h'),
-            (1500, 24, '#e377c2', '1.5g q24h'),
-            (1000, 24, '#2ca02c', '1g q24h'),
-            (500,  24, '#17becf', '0.5g q24h'),
-            (2000, 12, '#d62728', '2g q12h'),
-            (1500, 12, '#9467bd', '1.5g q12h'),
-            (1000, 12, '#1f77b4', '1g q12h'),
-            (500,  12, '#8c564b', '0.5g q12h'),
-        ]
+        # 投与量・投与間隔比較（6パターン）
         fig_dc = go.Figure()
-        for d, ii_cmp, col_c, lbl in dose_compare:
+        for lbl, d, ii_cmp, col_c in REGIMEN_PATTERNS:
             nd_cmp = max(3, int(7 * 24 / ii_cmp))
             dos_cmp = {**dosing, 'dose_mg': d, 'ii_h': ii_cmp,
                        'n_doses': nd_cmp}
@@ -518,7 +517,7 @@ with tab2:
             ss_d = df_d[(df_d['time'] >= t_cmp_prev2) & (df_d['time'] <= t_cmp_last)]
             fig_dc.add_trace(go.Scatter(
                 x=ss_d['time'], y=ss_d['Cp_free'],
-                name=f'{lbl} ({ft_d:.0f}%)',
+                name=f'{lbl}（%fT>MIC {ft_d:.0f}%）',
                 line=dict(color=col_c, width=2),
             ))
         fig_dc.add_hline(y=mic_val, line_dash='dash', line_color='black',
@@ -911,16 +910,7 @@ with tab5:
     elif hm_type == "%fT>MIC (GFR × 投与パターン)":
         with st.spinner("ヒートマップ計算中..."):
             gfr_range_ft = np.arange(15, 121, 15)
-            dose_range_ft = [
-                ('0.5g 24h毎', 500, 24),
-                ('0.5g 12h毎', 500, 12),
-                ('1g 24h毎', 1000, 24),
-                ('1g 12h毎', 1000, 12),
-                ('1.5g 24h毎', 1500, 24),
-                ('1.5g 12h毎', 1500, 12),
-                ('2g 24h毎', 2000, 24),
-                ('2g 12h毎', 2000, 12),
-            ]
+            dose_range_ft = [(label, dose, ii_h) for label, dose, ii_h, _ in REGIMEN_PATTERNS]
             grid_ft = np.zeros((len(dose_range_ft), len(gfr_range_ft)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range_ft):
@@ -952,16 +942,7 @@ with tab5:
     else:  # 最大 SI (GFR × 投与パターン)
         with st.spinner("ヒートマップ計算中..."):
             gfr_range2 = np.arange(15, 121, 15)
-            dose_range2 = [
-                ('0.5g 24h毎', 500, 24),
-                ('0.5g 12h毎', 500, 12),
-                ('1g 24h毎', 1000, 24),
-                ('1g 12h毎', 1000, 12),
-                ('1.5g 24h毎', 1500, 24),
-                ('1.5g 12h毎', 1500, 12),
-                ('2g 24h毎', 2000, 24),
-                ('2g 12h毎', 2000, 12),
-            ]
+            dose_range2 = [(label, dose, ii_h) for label, dose, ii_h, _ in REGIMEN_PATTERNS]
             grid_si = np.zeros((len(dose_range2), len(gfr_range2)))
 
             for i, (dlabel, d, ii_cmp) in enumerate(dose_range2):
