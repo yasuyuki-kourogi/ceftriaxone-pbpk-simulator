@@ -36,7 +36,7 @@ FIXED = {
     'FQlu': 1.0, 'FQli': 0.25, 'FQki': 0.19, 'FQre': 0.56,
     'FVart': 0.026, 'FVven': 0.051, 'FVlu': 0.008, 'FVli': 0.021,
     'FVki': 0.004, 'FVre': 0.60, 'FVgb': 0.0007,
-    'Kplu': 0.15, 'Kpli': 0.12, 'Kpki': 0.15, 'Kpre': 0.10,
+    'Kplu': 0.22, 'Kpli': 0.22, 'Kpki': 0.22, 'Kpre': 0.22,
     'CLbiliary': 0.22, 'fu_ref': 0.05, 'GFR_filt_fraction': 1.0,
     'Ksp': 1.62e-6, 'SI_threshold': 10.4,
 }
