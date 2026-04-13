@@ -81,8 +81,7 @@ def _pbpk_rhs(t, y, p, dose_schedule, meal_hours):
     CLrenal_u = p['GFR'] * 0.06 * p['GFR_filt_fraction']
     Renal_elim = CLrenal_u * Cu_plasma
 
-    CLint_biliary = p['CLbiliary'] / p['fu_ref']
-    Biliary_elim = max(0.0, CLint_biliary * Cu_plasma)
+    Biliary_elim = max(0.0, p['CLbiliary'] * Cp_ven)
 
     infusion = 0.0
     for t_dose, dose_mg, tinf_h in dose_schedule:
@@ -991,8 +990,8 @@ with tab6:
 
         st.subheader("非線形蛋白結合")
         st.info(
-            "Michaelis-Menten型アルブミン結合 (Ewoldt et al. 2023):\n\n"
-            "Ct = Cu + Bmax × (ALB/ALB_ref)^θ × Cu / (Kd + Cu)\n\n"
+            "Michaelis-Menten型1サイト飽和結合モデル:\n\n"
+            "Ct = Cu + Bmax × (ALB/ALBref)^θ × Cu / (Kd + Cu)\n\n"
             "- Bmax = 0.55 mmol/L (≈305 mg/L, 健常人)\n"
             "- Kd = 0.030 mmol/L (≈17 mg/L)\n"
             "- θ_ALB = 1.0（アルブミンに比例）"
@@ -1000,9 +999,9 @@ with tab6:
 
         st.subheader("胆汁クリアランス")
         st.info(
-            "CLbiliary（見かけのCL）= 0.22 L/h @ fu_ref = 0.05\n\n"
-            "CLint = CLbiliary / fu_ref → 遊離型濃度に適用\n\n"
-            "低ALB時: fu上昇 → 胆汁排泄が増加 → SI上昇"
+            "CLbiliary = 0.22 L/h（Alasmari et al. 2023）\n\n"
+            "総血漿中濃度に対する固定クリアランスとして適用\n\n"
+            "Alasmari et al.に準じた実装"
         )
 
     with col_m2:
@@ -1059,7 +1058,7 @@ with tab6:
 | 項目 | 本モデルの扱い | 実際 |
 |------|--------------|------|
 | **腎排泄** | 糸球体濾過のみ（GFR × fu） | セフトリアキソンは一部尿細管分泌もある |
-| **胆汁クリアランス** | 遊離型血漿濃度に比例（well-stirred model: CLint × Cu） | 低抽出率薬物の原則に従い、遊離型濃度に依存 |
+| **胆汁クリアランス** | 総血漿中濃度に対する固定CL（Alasmari et al.に準じた実装） | 実際には能動輸送（MRP2等）を介し、遊離型濃度依存の可能性もあるが、トランスポーター動態パラメータは十分に解明されていない |
 | **蛋白結合** | 飽和型1サイト結合モデル | 実臨床で広く受け入れられているモデル |
 | **胆嚢到達率** | 時刻依存（空腹時0.5 / 食後0.0、Oddi括約筋の開閉を反映） | 個人差・食事内容で変動 |
 | **胆嚢排出** | 食事時刻依存（CCK刺激、基礎排出+食後亢進） | 食事内容・個人差で変動、パラメータは仮定値 |
