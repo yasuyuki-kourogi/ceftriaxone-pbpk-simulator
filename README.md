@@ -1,5 +1,7 @@
 # セフトリアキソンPBPKシミュレーター
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ceftriaxone-pbpk-simulator.streamlit.app)
+
 セフトリアキソン（ceftriaxone, CTRX）の**治療効果指標**と**偽胆石リスク指標**を、同一の簡略化生理学的薬物動態（physiologically based pharmacokinetic, PBPK）モデル上で相対比較するための、教育用・探索用Webアプリケーションです。
 
 本アプリは、卒業研究
