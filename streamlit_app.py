@@ -92,8 +92,7 @@ def _pbpk_rhs(t, y, p, dose_schedule, meal_hours):
     CLrenal_u = p['GFR'] * 0.06 * p['GFR_filt_fraction']
     Renal_elim = CLrenal_u * Cu_plasma
 
-    CLint_biliary = p['CLbiliary'] / p['fu_ref']
-    Biliary_elim = max(0.0, CLint_biliary * Cu_plasma)
+    Biliary_elim = max(0.0, p['CLbiliary'] * Cp_ven)
 
     infusion = 0.0
     for t_dose, dose_mg, tinf_h in dose_schedule:
@@ -741,11 +740,10 @@ with tab4:
             st.plotly_chart(fig_a2, use_container_width=True)
 
         st.info(
-            "低アルブミン血症では非線形蛋白結合（Michaelis-Menten型）により"
-            "遊離型分率（fu）が上昇し、遊離型濃度が変動します。\n\n"
-            "- **fT>MIC**: fu上昇により遊離型濃度が上がるが、クリアランスも増加するため、"
-            "fT>MICへの影響は単純ではない\n"
-            "- **偽胆石リスク**: fu上昇 → 胆汁排泄増加 → 胆嚢内濃度上昇 → SIが上昇"
+            "低アルブミン血症では1サイト飽和結合モデルにより"
+            "遊離型分率（fu）が上昇し、遊離型濃度および腎排泄が変動します。\n\n"
+            "- **%fT>MIC**: fu上昇により遊離型濃度は変動するが、遊離型クリアランスも増加するため、影響は単純ではない\n"
+            "- **SI**: 本モデルでは胆汁排泄を総濃度ベースの固定CLで実装しているため、ALBの影響は生理学的期待と逆転しうる"
         )
 
     elif sa_type == "GFR の影響":
@@ -1054,9 +1052,9 @@ with tab6:
 
         st.subheader("参考文献")
         st.info(
-            "- Alasmari F et al. (2023) *Front Pharmacol* 14:1200828 — PBPKモデル構造・Kp値・胆汁CL\n"
-            "- Ewoldt TMJ et al. (2023) *J Antimicrob Chemother* 78:1059-1065 — 遊離濃度予測モデル・蛋白結合\n"
-            "- Schleibinger M et al. (2015) *Br J Clin Pharmacol* 80:525-533 — ICU患者PK・蛋白結合\n"
+            "- Alasmari F et al. (2023) *Front Pharmacol* 14:1200828 — PBPK構造および胆汁クリアランス設定の参考\n"
+            "- Ewoldt TMJ et al. (2023) *J Antimicrob Chemother* 78:1059-1065 — 蛋白結合と遊離型分率の背景\n"
+            "- Schleibinger M et al. (2015) *Br J Clin Pharmacol* 80:525-533 — ICU患者における蛋白結合・PKの背景\n"
             "- Shiffman ML et al. (1990) *Gastroenterology* 99:1772-1778 — Ca-CTRX 溶解度積\n"
             "- Craig WA (1998) *Clin Infect Dis* 26:1-10 — β-ラクタム系PK/PDターゲット\n"
             "- Drusano GL (2003) *Clin Infect Dis* 36(Suppl 1):S42-S50 — 耐性抑制のためのPK/PD投与設計\n"
@@ -1069,8 +1067,8 @@ with tab6:
 | 項目 | 本モデルの扱い | 実際 |
 |------|--------------|------|
 | **腎排泄** | 糸球体濾過のみ（GFR × fu） | セフトリアキソンは一部尿細管分泌もある |
-| **胆汁クリアランス** | 遊離型血漿濃度に比例（well-stirred model: CLint × Cu） | 低抽出率薬物の原則に従い、遊離型濃度に依存 |
-| **蛋白結合** | 飽和型1サイト結合モデル | 実臨床で広く受け入れられているモデル |
+| **胆汁クリアランス** | 総血漿中濃度ベースの固定見かけクリアランス | 実際には能動輸送を含むより複雑な挙動をとる可能性がある |
+| **蛋白結合** | 1サイト飽和結合モデル | CTRXの可変・飽和性蛋白結合を教育用に簡略化して表現 |
 | **胆嚢到達率** | 時刻依存（空腹時0.5 / 食後0.0、Oddi括約筋の開閉を反映） | 個人差・食事内容で変動 |
 | **胆嚢排出** | 食事時刻依存（CCK刺激、基礎排出+食後亢進） | 食事内容・個人差で変動、パラメータは仮定値 |
 | **胆嚢濃縮** | 未反映（胆嚢容積一定） | 水分吸収により5〜20倍に濃縮される。絶食時ほど貯留時間が長く濃縮が進む |
