@@ -263,8 +263,7 @@ def _last_dose_time(ii_h, n_doses):
 
 def calc_fTMIC(df, mic, ii_h, n_doses):
     t_last = _last_dose_time(ii_h, n_doses)
-    t_prev = _last_dose_time(ii_h, n_doses - 1) if n_doses > 1 else t_last - ii_h
-    ss = df[(df['time'] >= t_prev) & (df['time'] <= t_last)]
+    ss = df[(df['time'] >= t_last) & (df['time'] <= t_last + ii_h)]
     if len(ss) < 2:
         return np.nan
     return np.sum(ss['Cp_free'] > mic) / len(ss) * 100.0
@@ -377,8 +376,7 @@ with tab1:
 
     # PK Summary
     t_last = _last_dose_time(ii_h, ndoses)
-    t_prev = _last_dose_time(ii_h, ndoses - 1) if ndoses > 1 else t_last - ii_h
-    ss = df[(df['time'] >= t_prev) & (df['time'] <= t_last)]
+    ss = df[(df['time'] >= t_last) & (df['time'] <= t_last + ii_h)]
     ftmic = calc_fTMIC(df, mic_val, ii_h, ndoses)
     max_si = calc_max_SI(df, ii_h, ndoses)
     dose_total = dose_mg * ndoses
@@ -390,7 +388,7 @@ with tab1:
     auc_free = _trapz(ss['Cp_free'], ss['time']) if len(ss) >= 2 else 0.0
 
     # SI 関連指標 (定常状態)
-    ss_si = df[df['time'] >= t_prev]
+    ss_si = df[df['time'] >= t_last]
     si_above_time = (ss_si['SI'] > FIXED['SI_threshold']).sum() / len(ss_si) * 100 if len(ss_si) > 0 else 0.0
     auc_si = _trapz(ss_si['SI'], ss_si['time']) if len(ss_si) >= 2 else 0.0
 
@@ -1011,9 +1009,10 @@ with tab6:
 
         st.subheader("胆汁クリアランス")
         st.info(
-            "CLbiliary（見かけのCL）= 0.22 L/h @ fu_ref = 0.05\n\n"
-            "CLint = CLbiliary / fu_ref → 遊離型濃度に適用\n\n"
-            "低ALB時: fu上昇 → 胆汁排泄が増加 → SI上昇"
+            "CLbiliary（見かけのCL）= 0.22 L/h\n\n"
+            "胆汁排泄量 = CLbiliary × Cp_total（**総血漿中濃度ベース**）\n\n"
+            "fu（遊離型分率）の変動は胆汁排泄へ直接反映されない\n\n"
+            "低ALB時: fu上昇 → 腎排泄は増加するが、胆汁排泄は変化しない"
         )
 
     with col_m2:
